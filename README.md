@@ -159,6 +159,12 @@ Learn how to set CPU and memory requests and limits on pods, then use the Horizo
 ### Lab 9 — Health Checks & Self-Healing (`labs/lab9-probes.sh`)
 Deep dive into Kubernetes probes — liveness, readiness, and startup. Observe a liveness failure trigger an automatic restart, a readiness failure remove a pod from the load balancer without restarting it, and a startup probe protect a slow-starting container from premature liveness checks. Ends with the full production pattern used in Lab 4.
 
+### Lab 10 — WordPress + MySQL (`labs/lab10-wordpress.sh`)
+Deploy a classic two-tier application: WordPress backed by MySQL. Introduces PersistentVolumeClaims in a practical context, service discovery by DNS name, and multi-container app coordination via Secrets. Verify persistence by deleting and restarting pods and confirming data survives.
+
+### Lab 11 — Rolling Updates & Zero-Downtime Deploys (`labs/lab11-rolling-updates.sh`)
+Learn how Kubernetes updates applications without dropping traffic. Deploy a 4-replica app, stream live traffic through it, perform a rolling update to v2, simulate a broken release with a bad image, and roll back — all while observing that the service never goes down. Also covers pausing and resuming rollouts for canary-style deploys.
+
 ## Cluster Management
 
 ```bash
