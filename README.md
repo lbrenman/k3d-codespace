@@ -119,11 +119,10 @@ k9s
 
 Work through the labs in order. Each builds on concepts from the previous one.
 
-Each lab uses its own Kubernetes namespace (`lab1`, `lab2`, `lab3`, `microservices`),
-so all four labs can run simultaneously without any conflicts. The cleanup command
-at the end of each lab is optional — skip it if you want to keep multiple labs
-running at the same time and compare them. Resource usage is light enough that
-a standard Codespace (2 cores, 8GB RAM) handles all four comfortably.
+Each lab uses its own Kubernetes namespace (`lab1`, `lab2`, etc.), so all labs
+can run simultaneously without any conflicts. The cleanup command at the end of
+each lab is optional — skip it if you want to keep multiple labs running at the
+same time. A standard Codespace (2 cores, 8GB RAM) handles all labs comfortably.
 
 Check resource usage across all running labs at any time:
 ```bash
@@ -143,10 +142,22 @@ Create a ConfigMap and Secret, consume both in a Deployment via env vars and vol
 ### Lab 4 — Microservices with Postgres (`labs/lab4-microservices/`)
 A realistic multi-service project: two Node.js/Express REST APIs (Products and Users) sharing a single PostgreSQL database. Deployable via Docker Compose or Kubernetes. Covers Deployments, Services, Secrets, PersistentVolumeClaims, and Traefik Ingress routing across multiple services.
 
-> **Prerequisites for Lab 4:** Build the Docker images and import them into the cluster before applying K8s manifests — see `labs/lab4-microservices/README.md` for full instructions.
+> **Prerequisites for Lab 4:** Apply manifests one file at a time in order — see `labs/lab4-microservices/README.md` for full instructions.
 
 ### Lab 5 — Helm Charts: Prometheus & Grafana (`labs/lab5-helm/lab5-helm-charts.sh`)
 Learn Helm — the Kubernetes package manager. Install the kube-prometheus-stack chart to deploy a full Prometheus + Grafana monitoring stack, customize it with a `values.yaml` file and `--set` flags, upgrade the release, roll back to a previous revision, and inspect the underlying chart templates.
+
+### Lab 6 — RBAC (`labs/lab6-rbac.sh`)
+Learn how Kubernetes controls access using Role-Based Access Control. Create ServiceAccounts, Roles, and RoleBindings to grant fine-grained permissions to pods. Verify permissions with `kubectl auth can-i`, observe a pod interacting with the K8s API using its ServiceAccount token, and understand the difference between namespace-scoped Roles and cluster-wide ClusterRoles.
+
+### Lab 7 — Jobs & CronJobs (`labs/lab7-jobs.sh`)
+Explore Kubernetes batch workloads. Run a one-off Job to completion, process work in parallel with multiple pod completions, schedule recurring tasks with a CronJob, manually trigger a CronJob run, suspend and resume a schedule, and observe automatic retry behavior when a Job fails.
+
+### Lab 8 — Resource Limits & Autoscaling (`labs/lab8-autoscaling.sh`)
+Learn how to set CPU and memory requests and limits on pods, then use the Horizontal Pod Autoscaler (HPA) to automatically scale a deployment up and down based on live CPU usage. Includes a load generator to trigger real scaling events and a demonstration of why resource requests are required for HPA to function.
+
+### Lab 9 — Health Checks & Self-Healing (`labs/lab9-probes.sh`)
+Deep dive into Kubernetes probes — liveness, readiness, and startup. Observe a liveness failure trigger an automatic restart, a readiness failure remove a pod from the load balancer without restarting it, and a startup probe protect a slow-starting container from premature liveness checks. Ends with the full production pattern used in Lab 4.
 
 ## Cluster Management
 
