@@ -87,7 +87,11 @@ spec:
 YAML
 
 kubectl get pvc -n wordpress
-# STATUS should show Bound — storage has been provisioned
+# STATUS will show Pending — this is expected and normal in k3d.
+# k3d uses the local-path StorageClass which uses late binding, meaning
+# the volume is not actually provisioned until a pod mounts it.
+# The PVCs will flip to Bound automatically once MySQL and WordPress pods start.
+# Do not wait here — proceed to the next step and deploy MySQL.
 
 # ── Step 4: Deploy MySQL ──────────────────────────────────────────────────────
 kubectl apply -n wordpress -f - <<YAML
@@ -248,9 +252,12 @@ kubectl get pods -n wordpress -w
 
 # ── Step 7: Access WordPress ──────────────────────────────────────────────────
 kubectl port-forward svc/wordpress-svc 8082:80 -n wordpress
-# Visit port 8082 in your browser
-# You should see the WordPress installation/setup page
-# Complete the setup: choose a site title, admin username and password
+# Do NOT visit localhost:8082 — that won't work in a Codespace.
+# Instead open the PORTS tab in VS Code, find port 8082, and click
+# the globe icon to open the Codespace forwarded URL, which looks like:
+#   https://<your-codespace-name>-8082.app.github.dev
+# You should see the WordPress installation/setup page.
+# Complete the setup: choose a site title, admin username and password.
 # Press Ctrl+C to stop port-forward when done
 
 # ── Step 8: Verify persistence ────────────────────────────────────────────────
