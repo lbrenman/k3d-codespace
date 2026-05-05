@@ -115,8 +115,11 @@ curl http://localhost:8080/whoami
 kubectl get svc traefik -n kube-system
 
 # Port-forward the web port to a local port that does not clash:
-kubectl port-forward -n kube-system svc/traefik 9080:80
-# NOTE: trailing slash is required — http://localhost:9080/dashboard/
+kubectl port-forward -n kube-system \
+  $(kubectl get pods -n kube-system -l app.kubernetes.io/name=traefik -o name) \
+  9080:9000
+# NOTE: trailing slash is required — visit port 9080 in browser → /dashboard/
+# The traefik entrypoint is :9000 internally, mapped to local 9080 to avoid conflicts
 
 
 # ── Step 6: Clean up ─────────────────────────────────────────────────────────
