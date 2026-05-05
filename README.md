@@ -27,6 +27,64 @@ Port mappings (Codespace → cluster):
   8443 → LoadBalancer :443  (HTTPS ingress)
 ```
 
+## Understanding Servers and Agents
+
+A Kubernetes cluster is made up of nodes with two distinct roles:
+
+**Server (Control Plane)**
+The server node is the brain of the cluster. It runs the core Kubernetes system
+components — the API server (what kubectl talks to), the scheduler (decides which
+node runs which pod), and the controller manager (maintains desired state). All
+cluster decisions are made here. You generally don't run your own application
+workloads on the server.
+
+**Agents (Worker Nodes)**
+Agent nodes are the muscle. They register with the server and wait for
+instructions. When you deploy an app, the scheduler assigns pods to agent nodes,
+which then pull the container image and run it. All your actual application
+workloads run here.
+
+**Why two agents?**
+It mirrors a realistic production setup where you'd never run everything on one
+machine. With two agents you can observe how Kubernetes distributes pods across
+nodes, see what happens when you scale a deployment (pods spread across both
+agents), and explore scheduling behavior. With only one agent, all pods would
+always land in the same place — hiding a lot of interesting behavior.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    k3d cluster: k8s-lab                  │
+│                                                          │
+│  ┌─────────────────────────────────┐                    │
+│  │  server-0  (control plane)      │                    │
+│  │  ┌──────────┐  ┌─────────────┐  │                    │
+│  │  │ API      │  │ Scheduler / │  │                    │
+│  │  │ Server   │  │ Controllers │  │                    │
+│  │  └──────────┘  └─────────────┘  │                    │
+│  └─────────────────────────────────┘                    │
+│                                                          │
+│  ┌──────────────────┐  ┌──────────────────┐             │
+│  │  agent-0         │  │  agent-1         │             │
+│  │  (worker node)   │  │  (worker node)   │             │
+│  │  runs your pods  │  │  runs your pods  │             │
+│  └──────────────────┘  └──────────────────┘             │
+│                                                          │
+│  ┌──────────────────────────────────────────┐           │
+│  │  LoadBalancer  :8080 → :80               │           │
+│  │                :8443 → :443              │           │
+│  └──────────────────────────────────────────┘           │
+└─────────────────────────────────────────────────────────┘
+```
+
+Verify this yourself after the cluster starts:
+```bash
+kubectl get nodes
+# NAME                    STATUS   ROLES           AGE
+# k3d-k8s-lab-server-0   Ready    control-plane   1m
+# k3d-k8s-lab-agent-0    Ready    <none>          1m
+# k3d-k8s-lab-agent-1    Ready    <none>          1m
+```
+
 ## Quick Start
 
 The cluster starts automatically when the Codespace launches.
@@ -60,7 +118,7 @@ k9s
 Work through the labs in order. Each builds on concepts from the previous one.
 
 ### Lab 1 — First Deployment (`labs/lab1-first-deployment.sh`)
-Deploy nginx, create a Service, port-forward and test, scale the deployment.
+Deploy nginx, create a ClusterIP Service, port-forward and test, scale the deployment.
 
 ### Lab 2 — Ingress with Traefik (`labs/lab2-ingress-traefik.sh`)
 Deploy two apps, route traffic by path using Traefik Ingress, access via Codespace port 8080, explore the Traefik dashboard.

@@ -2,12 +2,40 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Learn how Kubernetes separates configuration from container images using
 # ConfigMaps (non-sensitive config) and Secrets (sensitive data).
+# This is a core 12-factor app principle — config lives outside the image.
+#
+# What you will build:
+#
+#   ┌──────────────────────────────────────────────────────────────┐
+#   │  Namespace: lab3                                             │
+#   │                                                              │
+#   │  ┌─────────────────────┐   ┌──────────────────────────┐    │
+#   │  │ ConfigMap: app-config│   │ Secret: app-secret        │    │
+#   │  │                     │   │                           │    │
+#   │  │ APP_ENV=production  │   │ DB_PASSWORD=***           │    │
+#   │  │ LOG_LEVEL=info      │   │ API_KEY=***               │    │
+#   │  │ welcome.txt (file)  │   │                           │    │
+#   │  └──────┬──────────────┘   └─────────────┬─────────────┘    │
+#   │         │  env vars + volume              │  env vars        │
+#   │         └──────────────┬──────────────────┘                  │
+#   │                        ▼                                     │
+#   │         ┌──────────────────────────────┐                     │
+#   │         │  Deployment: config-demo     │                     │
+#   │         │  (busybox container)         │                     │
+#   │         │                              │                     │
+#   │         │  env: APP_ENV, LOG_LEVEL,    │                     │
+#   │         │       DB_PASSWORD            │                     │
+#   │         │  vol: /config/welcome.txt    │                     │
+#   │         └──────────────────────────────┘                     │
+#   └──────────────────────────────────────────────────────────────┘
+#
+# Key concepts: ConfigMap, Secret, env vars, volume mounts, base64 encoding
 
 # ── Step 1: Create namespace ──────────────────────────────────────────────────
 kubectl create namespace lab3
 
 # ── Step 2: Create a ConfigMap ────────────────────────────────────────────────
-kubectl apply -n lab3 -f - <<EOF
+kubectl apply -n lab3 -f - <<YAML
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -19,24 +47,25 @@ data:
   welcome.txt: |
     Welcome to the K8s lab!
     This message comes from a ConfigMap volume mount.
-EOF
+YAML
 
 kubectl describe configmap app-config -n lab3
 
 # ── Step 3: Create a Secret ───────────────────────────────────────────────────
-# Secrets are base64-encoded (not encrypted by default, but access-controlled)
+# Secrets are base64-encoded (not encrypted by default, but access-controlled).
+# Never store plaintext passwords in ConfigMaps — always use Secrets.
 kubectl create secret generic app-secret \
   --from-literal=DB_PASSWORD=supersecret123 \
   --from-literal=API_KEY=myapikey456 \
   -n lab3
 
 kubectl describe secret app-secret -n lab3
-# Note: values are hidden. Decode one manually:
+# Note: values are hidden in describe output. Decode one manually:
 kubectl get secret app-secret -n lab3 -o jsonpath='{.data.DB_PASSWORD}' | base64 --decode
 echo ""
 
 # ── Step 4: Deploy an app that uses both ─────────────────────────────────────
-kubectl apply -n lab3 -f - <<EOF
+kubectl apply -n lab3 -f - <<YAML
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -83,7 +112,7 @@ spec:
           items:
           - key: welcome.txt
             path: welcome.txt
-EOF
+YAML
 
 # ── Step 5: Inspect the running pod ──────────────────────────────────────────
 POD=$(kubectl get pod -n lab3 -l app=config-demo -o jsonpath='{.items[0].metadata.name}')
@@ -100,7 +129,9 @@ kubectl logs -n lab3 $POD
 # ── Step 6: Update ConfigMap and observe ─────────────────────────────────────
 kubectl patch configmap app-config -n lab3 \
   --patch '{"data":{"LOG_LEVEL":"debug"}}'
-# Note: env var changes require pod restart; volume mounts update automatically (~1 min)
+# Important difference:
+# - Volume mounts update automatically inside the pod (~1 min)
+# - Env vars do NOT update — the pod must be restarted to pick them up
 
 # ── Step 7: Clean up ─────────────────────────────────────────────────────────
 kubectl delete namespace lab3
