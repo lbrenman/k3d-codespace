@@ -86,6 +86,11 @@ k3d image import products-api:latest users-api:latest -c k8s-lab
 
 ### 2. Apply manifests
 
+Apply the files **one at a time in this order** — the API deployments reference a
+Secret defined in `postgres.yaml`, so that must exist before the APIs are created.
+Using `kubectl apply -f k8s/` applies all files at once with no guaranteed order
+and will cause the API pods to fail with `CreateContainerConfigError`.
+
 ```bash
 kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/postgres.yaml
