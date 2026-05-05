@@ -111,8 +111,13 @@ curl http://localhost:8080/
 curl http://localhost:8080/whoami
 
 # ── Step 5: Inspect Traefik dashboard (optional) ──────────────────────────────
-kubectl port-forward -n kube-system svc/traefik 9000:9000
-# Visit port 9000 → /dashboard/
+# First check what ports Traefik actually exposes:
+kubectl get svc traefik -n kube-system
+
+# Port-forward the web port to a local port that does not clash:
+kubectl port-forward -n kube-system svc/traefik 9080:80
+# NOTE: trailing slash is required — http://localhost:9080/dashboard/
+
 
 # ── Step 6: Clean up ─────────────────────────────────────────────────────────
 kubectl delete namespace lab2
