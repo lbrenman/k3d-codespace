@@ -14,8 +14,9 @@
     }
   },
 
-  "postCreateCommand": "bash .devcontainer/scripts/install.sh",
-  "postStartCommand": "bash .devcontainer/scripts/start-cluster.sh",
+  "postCreateCommand": "bash .devcontainer/scripts/install.sh && echo '✅ postCreateCommand done'",
+  "postStartCommand": "bash .devcontainer/scripts/start-cluster.sh && echo '✅ postStartCommand done'",
+  "postAttachCommand": "k3d kubeconfig merge k8s-lab --kubeconfig-switch-context 2>/dev/null || true && echo '✅ kubeconfig ready'",
 
   "forwardPorts": [8080, 8081, 8443, 9090, 3000],
   "portsAttributes": {
@@ -42,6 +43,6 @@
   },
 
   "remoteEnv": {
-    "KUBECONFIG": "/home/vscode/.kube/config"
+    "KUBECONFIG": "/root/.kube/config"
   }
 }
