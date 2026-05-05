@@ -2,6 +2,8 @@
 
 A GitHub Codespace-based Kubernetes learning environment using **k3d** — fast, lightweight, and built for teaching.
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/lbrenman/k3d-codespace)
+
 ## What's Included
 
 | Tool | Purpose |
@@ -116,6 +118,18 @@ k9s
 ## Labs
 
 Work through the labs in order. Each builds on concepts from the previous one.
+
+Each lab uses its own Kubernetes namespace (`lab1`, `lab2`, `lab3`, `microservices`),
+so all four labs can run simultaneously without any conflicts. The cleanup command
+at the end of each lab is optional — skip it if you want to keep multiple labs
+running at the same time and compare them. Resource usage is light enough that
+a standard Codespace (2 cores, 8GB RAM) handles all four comfortably.
+
+Check resource usage across all running labs at any time:
+```bash
+kubectl top nodes
+kubectl top pods -A
+```
 
 ### Lab 1 — First Deployment (`labs/lab1-first-deployment.sh`)
 Deploy nginx, create a ClusterIP Service, port-forward and test, scale the deployment.
