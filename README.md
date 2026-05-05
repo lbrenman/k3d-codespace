@@ -145,6 +145,9 @@ A realistic multi-service project: two Node.js/Express REST APIs (Products and U
 
 > **Prerequisites for Lab 4:** Build the Docker images and import them into the cluster before applying K8s manifests — see `labs/lab4-microservices/README.md` for full instructions.
 
+### Lab 5 — Helm Charts: Prometheus & Grafana (`labs/lab5-helm/lab5-helm-charts.sh`)
+Learn Helm — the Kubernetes package manager. Install the kube-prometheus-stack chart to deploy a full Prometheus + Grafana monitoring stack, customize it with a `values.yaml` file and `--set` flags, upgrade the release, roll back to a previous revision, and inspect the underlying chart templates.
+
 ## Cluster Management
 
 ```bash

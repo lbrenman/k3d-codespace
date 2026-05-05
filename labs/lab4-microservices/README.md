@@ -211,3 +211,16 @@ lab4-microservices/
         ├── db/              ← client.js, schema.sql
         └── data/            ← seed.js
 ```
+## Cleanup
+
+**Docker Compose:**
+```bash
+docker compose down -v
+```
+The `-v` flag removes the postgres volume so the database is fully reset on next `up`.
+
+**Kubernetes:**
+```bash
+kubectl delete namespace microservices
+```
+This removes all resources in the namespace — Deployments, Services, Secrets, the PersistentVolumeClaim, and the Postgres data volume.
