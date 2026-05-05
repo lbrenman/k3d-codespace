@@ -1,0 +1,55 @@
+version: '3.9'
+
+services:
+
+  # ── Shared PostgreSQL ────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       shared_db
+      POSTGRES_USER:     api_user
+      POSTGRES_PASSWORD: api_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./.pgdata:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U api_user -d shared_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Products API ─────────────────────────────────────────────────────────────
+  products-api:
+    build: ./products-api
+    container_name: products-api
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      PORT:         3001
+      AUTH_MODE:    apikey
+      API_KEY:      changeme
+      DATABASE_URL: postgresql://api_user:api_pass@postgres:5432/shared_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ── Users API ─────────────────────────────────────────────────────────────────
+  users-api:
+    build: ./users-api
+    container_name: users-api
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      PORT:         3002
+      AUTH_MODE:    apikey
+      API_KEY:      changeme
+      DATABASE_URL: postgresql://api_user:api_pass@postgres:5432/shared_db
+    depends_on:
+      postgres:
+        condition: service_healthy
