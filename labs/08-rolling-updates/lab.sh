@@ -269,3 +269,14 @@ kubectl rollout history deployment/web-app -n lab08
 # ── Step 12: Clean up ────────────────────────────────────────────────────────
 kubectl delete pod traffic -n lab08 --ignore-not-found
 kubectl delete namespace lab08
+
+
+# ── Further Reading ───────────────────────────────────────────────────────────
+# Rolling updates:
+#   https://kubernetes.io/docs/tutorials/kubernetes-basics/update/update-intro/
+# Deployment strategies:
+#   https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+# kubectl rollout reference:
+#   https://kubernetes.io/docs/reference/kubectl/generated/kubectl_rollout/
+# Canary deployments:
+#   https://kubernetes.io/docs/concepts/cluster-administration/manage-deployment/#canary-deployments

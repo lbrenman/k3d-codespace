@@ -288,3 +288,14 @@ kubectl exec -it $MYSQL_POD -n lab06 -- \
 # ── Step 11: Clean up ────────────────────────────────────────────────────────
 kubectl delete namespace lab06
 # Note: deleting the namespace also deletes the PVCs and their data
+
+
+# ── Further Reading ───────────────────────────────────────────────────────────
+# Persistent Volumes:
+#   https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+# PersistentVolumeClaims:
+#   https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims
+# StorageClasses:
+#   https://kubernetes.io/docs/concepts/storage/storage-classes/
+# Example: Deploying WordPress and MySQL with Persistent Volumes (official):
+#   https://kubernetes.io/docs/tutorials/stateful-application/mysql-wordpress-persistent-volume/

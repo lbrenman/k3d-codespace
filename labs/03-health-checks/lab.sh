@@ -301,3 +301,12 @@ kubectl describe pod -n lab03 -l app=production-pattern | grep -A8 "Startup\|Liv
 
 # ── Step 15: Clean up ────────────────────────────────────────────────────────
 kubectl delete namespace lab03
+
+
+# ── Further Reading ───────────────────────────────────────────────────────────
+# Configure Liveness, Readiness and Startup Probes:
+#   https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+# Pod Lifecycle:
+#   https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/
+# Container probes reference:
+#   https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#Probe

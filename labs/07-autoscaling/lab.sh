@@ -202,3 +202,14 @@ kubectl get hpa -n lab07
 
 # ── Step 9: Clean up ─────────────────────────────────────────────────────────
 kubectl delete namespace lab07
+
+
+# ── Further Reading ───────────────────────────────────────────────────────────
+# Resource requests and limits:
+#   https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+# Horizontal Pod Autoscaling:
+#   https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
+# HPA walkthrough (official tutorial):
+#   https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/
+# Metrics Server:
+#   https://github.com/kubernetes-sigs/metrics-server

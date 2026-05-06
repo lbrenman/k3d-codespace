@@ -229,3 +229,13 @@ The `-v` flag removes the postgres volume so the database is fully reset on next
 kubectl delete namespace microservices
 ```
 This removes all resources in the namespace — Deployments, Services, Secrets, the PersistentVolumeClaim, and the Postgres data volume.
+
+
+## Further Reading
+
+- [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
+- [Services](https://kubernetes.io/docs/concepts/services-networking/service/)
+- [Secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
+- [PersistentVolumeClaims](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
+- [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/)
+- [Docker Compose documentation](https://docs.docker.com/compose/)

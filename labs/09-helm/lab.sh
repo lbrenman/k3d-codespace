@@ -185,3 +185,16 @@ helm template monitoring \
 # ── Step 15: Clean up ────────────────────────────────────────────────────────
 helm uninstall monitoring -n monitoring
 kubectl delete namespace monitoring
+
+
+# ── Further Reading ───────────────────────────────────────────────────────────
+# Helm documentation:
+#   https://helm.sh/docs/
+# Helm chart repository (Artifact Hub):
+#   https://artifacthub.io/
+# kube-prometheus-stack chart:
+#   https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
+# Prometheus documentation:
+#   https://prometheus.io/docs/introduction/overview/
+# Grafana documentation:
+#   https://grafana.com/docs/grafana/latest/

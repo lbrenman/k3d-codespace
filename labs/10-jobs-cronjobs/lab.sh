@@ -249,3 +249,14 @@ kubectl get job failing-job -n lab10
 
 # ── Step 13: Clean up ────────────────────────────────────────────────────────
 kubectl delete namespace lab10
+
+
+# ── Further Reading ───────────────────────────────────────────────────────────
+# Jobs:
+#   https://kubernetes.io/docs/concepts/workloads/controllers/job/
+# CronJobs:
+#   https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/
+# Cron syntax reference:
+#   https://en.wikipedia.org/wiki/Cron#CRON_expression
+# Running automated tasks with CronJobs (official tutorial):
+#   https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/

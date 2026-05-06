@@ -135,3 +135,14 @@ kubectl patch configmap app-config -n lab02 \
 
 # ── Step 7: Clean up ─────────────────────────────────────────────────────────
 kubectl delete namespace lab02
+
+
+# ── Further Reading ───────────────────────────────────────────────────────────
+# ConfigMaps:
+#   https://kubernetes.io/docs/concepts/configuration/configmap/
+# Secrets:
+#   https://kubernetes.io/docs/concepts/configuration/secret/
+# Environment variables from ConfigMaps and Secrets:
+#   https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/
+# 12-Factor App config principles:
+#   https://12factor.net/config

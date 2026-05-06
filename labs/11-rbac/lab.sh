@@ -214,3 +214,14 @@ kubectl get clusterroles,clusterrolebindings | grep node-reader
 kubectl delete namespace lab11
 kubectl delete clusterrole node-reader
 kubectl delete clusterrolebinding node-reader-binding
+
+
+# ── Further Reading ───────────────────────────────────────────────────────────
+# RBAC Authorization:
+#   https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+# ServiceAccounts:
+#   https://kubernetes.io/docs/concepts/security/service-accounts/
+# Using RBAC Authorization (reference):
+#   https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole
+# Kubernetes security best practices:
+#   https://kubernetes.io/docs/concepts/security/security-checklist/

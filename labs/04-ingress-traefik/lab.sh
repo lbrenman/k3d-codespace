@@ -151,3 +151,14 @@ kubectl port-forward -n kube-system \
 
 # ── Step 6: Clean up ─────────────────────────────────────────────────────────
 kubectl delete namespace lab04
+
+
+# ── Further Reading ───────────────────────────────────────────────────────────
+# Ingress:
+#   https://kubernetes.io/docs/concepts/services-networking/ingress/
+# Ingress Controllers:
+#   https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/
+# Traefik Kubernetes Ingress documentation:
+#   https://doc.traefik.io/traefik/providers/kubernetes-ingress/
+# Service types (ClusterIP, NodePort, LoadBalancer):
+#   https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types

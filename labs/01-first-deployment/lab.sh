@@ -88,3 +88,16 @@ kubectl get pods -n lab01
 
 # ── Step 9: Clean up ─────────────────────────────────────────────────────────
 kubectl delete namespace lab01
+
+
+# ── Further Reading ───────────────────────────────────────────────────────────
+# Pods:
+#   https://kubernetes.io/docs/concepts/workloads/pods/
+# Deployments:
+#   https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+# ReplicaSets:
+#   https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+# Services:
+#   https://kubernetes.io/docs/concepts/services-networking/service/
+# kubectl port-forward:
+#   https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/
