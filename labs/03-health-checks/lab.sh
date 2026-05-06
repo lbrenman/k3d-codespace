@@ -1,8 +1,8 @@
-# Lab 9: Health Checks & Self-Healing — Probes
+# Lab 03: Health Checks & Self-Healing — Probes
 # ─────────────────────────────────────────────────────────────────────────────
 # Kubernetes uses three types of probes to monitor container health and decide
 # when to restart a pod, stop sending it traffic, or delay starting it.
-# You may have noticed these in Lab 4's products-api and users-api —
+# You may have noticed these in Lab 05's products-api and users-api —
 # this lab explores them in depth so you understand exactly what each one does.
 #
 # HOW TO USE THIS LAB:

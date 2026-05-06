@@ -1,4 +1,4 @@
-# Lab 1: Deploy Your First App
+# Lab 01: Deploy Your First App
 # ─────────────────────────────────────────────────────────────────────────────
 # In this lab you will deploy a simple nginx web server, expose it as a
 # ClusterIP Service, and access it via port-forward. You will also scale
@@ -7,7 +7,7 @@
 # What you will build:
 #
 #   ┌──────────────────────────────────────────────────────────┐
-#   │  Namespace: lab1                                         │
+#   │  Namespace: lab01                                         │
 #   │                                                          │
 #   │  ┌─────────────────────────────────────────────────┐    │
 #   │  │  Deployment: nginx  (replicas: 2 → 4)           │    │

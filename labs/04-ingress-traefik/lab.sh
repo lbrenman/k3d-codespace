@@ -1,4 +1,4 @@
-# Lab 2: Ingress with Traefik
+# Lab 04: Ingress with Traefik
 # ─────────────────────────────────────────────────────────────────────────────
 # k3d includes Traefik as its default ingress controller — no extra install
 # needed! This lab deploys two apps and routes to them via Ingress rules based
@@ -17,7 +17,7 @@
 #   │    /whoami  ──────────────────────────────────────────┐ │
 #   │    /        ───────────────────────────────────────┐  │ │
 #   └───────────────────────────────────────────────────────┘ │
-#        │  Namespace: lab2                              │  │
+#        │  Namespace: lab04                              │  │
 #        │                                              │  │
 #   ┌────▼─────────────────┐        ┌───────────────────▼──┐
 #   │  Service: web        │        │  Service: whoami      │
@@ -105,7 +105,7 @@ kubectl apply -n lab04 -f - <<YAML
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: lab2-ingress
+  name: lab04-ingress
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:

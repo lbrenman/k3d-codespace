@@ -1,4 +1,4 @@
-# Lab 10: Deploying WordPress + MySQL
+# Lab 06: Deploying WordPress + MySQL
 # ─────────────────────────────────────────────────────────────────────────────
 # A classic two-tier application: WordPress (PHP frontend) backed by MySQL.
 # This lab focuses on deploying real production software and introduces

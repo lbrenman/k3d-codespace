@@ -1,4 +1,4 @@
-# Lab 8: Resource Limits & Autoscaling (HPA)
+# Lab 07: Resource Limits & Autoscaling (HPA)
 # ─────────────────────────────────────────────────────────────────────────────
 # Kubernetes can automatically scale your application up and down based on
 # real-time CPU or memory usage using the Horizontal Pod Autoscaler (HPA).
@@ -12,7 +12,7 @@
 # What you will build:
 #
 #   ┌──────────────────────────────────────────────────────────────────┐
-#   │  Namespace: lab8                                                 │
+#   │  Namespace: lab07                                                 │
 #   │                                                                  │
 #   │  ┌─────────────────────────────────────────────────────────┐    │
 #   │  │  HPA: php-apache-hpa                                    │    │

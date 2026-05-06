@@ -1,4 +1,4 @@
-# Lab 4: Microservices with Postgres
+# Lab 05: Microservices with Postgres
 
 Two Node.js/Express REST APIs sharing a single PostgreSQL database, deployable
 via Docker Compose or Kubernetes.
@@ -53,7 +53,7 @@ without sharing credentials logic.
 ## Quick Start — Docker Compose
 
 ```bash
-cd labs/lab4-microservices
+cd labs/05-microservices
 
 # Start everything (postgres + both APIs)
 docker compose up --build
@@ -76,7 +76,7 @@ Swagger docs:
 ### 1. Build images and import into the k3d cluster
 
 ```bash
-cd labs/lab4-microservices
+cd labs/05-microservices
 
 docker build -t products-api:latest ./products-api
 docker build -t users-api:latest    ./users-api
@@ -183,7 +183,7 @@ All list endpoints support `?page=1&limit=10`:
 ## Project Structure
 
 ```
-lab4-microservices/
+05-microservices/
 ├── docker-compose.yml
 ├── init-db/
 │   └── 01-init.sql         ← creates tables + seeds data on first start

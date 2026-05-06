@@ -1,4 +1,4 @@
-# Lab 3: ConfigMaps, Secrets & Environment Variables
+# Lab 02: ConfigMaps, Secrets & Environment Variables
 # ─────────────────────────────────────────────────────────────────────────────
 # Learn how Kubernetes separates configuration from container images using
 # ConfigMaps (non-sensitive config) and Secrets (sensitive data).
@@ -7,7 +7,7 @@
 # What you will build:
 #
 #   ┌──────────────────────────────────────────────────────────────┐
-#   │  Namespace: lab3                                             │
+#   │  Namespace: lab02                                             │
 #   │                                                              │
 #   │  ┌─────────────────────┐   ┌──────────────────────────┐    │
 #   │  │ ConfigMap: app-config│   │ Secret: app-secret        │    │

@@ -1,4 +1,4 @@
-# Lab 5: Helm Charts — Prometheus & Grafana
+# Lab 09: Helm Charts — Prometheus & Grafana
 # ─────────────────────────────────────────────────────────────────────────────
 # Helm is the package manager for Kubernetes. Instead of writing and managing
 # individual YAML manifests, Helm bundles them into a "chart" — a versioned,
@@ -36,7 +36,7 @@
 #               values.yaml, --set, helm history, helm list
 
 # ── Step 1: Navigate to the lab folder ───────────────────────────────────────
-cd labs/lab5-helm
+cd labs/09-helm
 
 # ── Step 2: Verify helm is installed ─────────────────────────────────────────
 helm version

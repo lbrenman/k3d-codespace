@@ -1,4 +1,4 @@
-# Lab 11: Rolling Updates & Zero-Downtime Deploys
+# Lab 08: Rolling Updates & Zero-Downtime Deploys
 # ─────────────────────────────────────────────────────────────────────────────
 # In production you need to update your application without dropping a single
 # request. Kubernetes handles this with rolling updates — gradually replacing
@@ -13,7 +13,7 @@
 # What you will build:
 #
 #   ┌──────────────────────────────────────────────────────────────────┐
-#   │  Namespace: lab11                                                │
+#   │  Namespace: lab08                                                │
 #   │                                                                  │
 #   │  Deployment: web-app  (4 replicas)                              │
 #   │                                                                  │

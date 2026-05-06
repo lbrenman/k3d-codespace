@@ -1,4 +1,4 @@
-# Lab 7: Jobs & CronJobs — Batch Workloads
+# Lab 10: Jobs & CronJobs — Batch Workloads
 # ─────────────────────────────────────────────────────────────────────────────
 # Not everything in Kubernetes is a long-running server. Jobs and CronJobs
 # handle batch workloads — tasks that run to completion rather than forever.
@@ -25,7 +25,7 @@
 # What you will build:
 #
 #   ┌──────────────────────────────────────────────────────────────────┐
-#   │  Namespace: lab7                                                 │
+#   │  Namespace: lab10                                                 │
 #   │                                                                  │
 #   │  Section A — Simple Job (runs once, completes)                  │
 #   │  Section B — Parallel Job (multiple pods, multiple completions)  │

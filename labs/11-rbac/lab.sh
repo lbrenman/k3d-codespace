@@ -1,4 +1,4 @@
-# Lab 6: RBAC — Roles, ServiceAccounts & Permissions
+# Lab 11: RBAC — Roles, ServiceAccounts & Permissions
 # ─────────────────────────────────────────────────────────────────────────────
 # RBAC (Role-Based Access Control) is how Kubernetes controls who (or what)
 # can do what to which resources. By default, pods have almost no permissions.
@@ -30,7 +30,7 @@
 # What you will build:
 #
 #   ┌──────────────────────────────────────────────────────────────────┐
-#   │  Namespace: lab6                                                 │
+#   │  Namespace: lab11                                                 │
 #   │                                                                  │
 #   │  ServiceAccount: pod-reader-sa                                  │
 #   │         │                                                        │
@@ -41,7 +41,7 @@
 #   │    - get, list services                                         │
 #   │                                                                  │
 #   │  Pod: rbac-demo (runs as pod-reader-sa)                         │
-#   │    ✅ can list pods in lab6                                      │
+#   │    ✅ can list pods in lab11                                      │
 #   │    ❌ cannot list pods in other namespaces                       │
 #   │    ❌ cannot create or delete pods                               │
 #   └──────────────────────────────────────────────────────────────────┘
@@ -59,7 +59,7 @@ kubectl get serviceaccounts -n lab11
 kubectl describe serviceaccount default -n lab11
 
 # Check what the default SA can do — almost nothing by default
-kubectl auth can-i list pods --as=system:serviceaccount:lab6:default -n lab11
+kubectl auth can-i list pods --as=system:serviceaccount:lab11:default -n lab11
 # Expected: no
 
 # ── Step 3: Create a custom ServiceAccount ────────────────────────────────────
@@ -94,7 +94,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: pod-reader-sa
-  namespace: lab6
+  namespace: lab11
 roleRef:
   kind: Role
   name: pod-reader
@@ -108,25 +108,25 @@ kubectl describe rolebinding pod-reader-binding -n lab11
 
 # Should be allowed (granted in the Role)
 kubectl auth can-i list pods \
-  --as=system:serviceaccount:lab6:pod-reader-sa -n lab11
+  --as=system:serviceaccount:lab11:pod-reader-sa -n lab11
 # Expected: yes
 
 kubectl auth can-i get services \
-  --as=system:serviceaccount:lab6:pod-reader-sa -n lab11
+  --as=system:serviceaccount:lab11:pod-reader-sa -n lab11
 # Expected: yes
 
 # Should be denied (not in the Role)
 kubectl auth can-i delete pods \
-  --as=system:serviceaccount:lab6:pod-reader-sa -n lab11
+  --as=system:serviceaccount:lab11:pod-reader-sa -n lab11
 # Expected: no
 
 kubectl auth can-i create deployments \
-  --as=system:serviceaccount:lab6:pod-reader-sa -n lab11
+  --as=system:serviceaccount:lab11:pod-reader-sa -n lab11
 # Expected: no
 
-# Cross-namespace check — Role only applies within lab6
+# Cross-namespace check — Role only applies within lab11
 kubectl auth can-i list pods \
-  --as=system:serviceaccount:lab6:pod-reader-sa -n kube-system
+  --as=system:serviceaccount:lab11:pod-reader-sa -n kube-system
 # Expected: no
 
 # ── Step 7: Deploy a pod that uses the ServiceAccount ────────────────────────
@@ -194,7 +194,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: pod-reader-sa
-  namespace: lab6
+  namespace: lab11
 roleRef:
   kind: ClusterRole
   name: node-reader
@@ -203,7 +203,7 @@ YAML
 
 # Now the SA can list nodes
 kubectl auth can-i list nodes \
-  --as=system:serviceaccount:lab6:pod-reader-sa
+  --as=system:serviceaccount:lab11:pod-reader-sa
 # Expected: yes
 
 # ── Step 10: View all RBAC resources in the namespace ────────────────────────
