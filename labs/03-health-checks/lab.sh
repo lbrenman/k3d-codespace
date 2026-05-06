@@ -85,9 +85,19 @@ YAML
 
 # ── Step 3: Watch the liveness probe fail and trigger a restart ───────────────
 kubectl get pod liveness-demo -n lab03 -w
-# After ~45s you will see RESTARTS go from 0 → 1
-# The pod keeps running — Kubernetes restarts just the container, not the pod
-# Press Ctrl+C
+# The -w flag watches for changes, but updates only print when something changes.
+# You may not see output for ~45s while the probe is failing.
+# When the restart happens you will see a new line like:
+#
+#   NAME            READY   STATUS    RESTARTS      AGE
+#   liveness-demo   1/1     Running   1 (3s ago)    104s
+#
+# Key things to notice:
+#   - RESTARTS increments (0 → 1 → 2 as the cycle repeats)
+#   - STATUS stays Running — the pod is never replaced, only the container inside it
+#   - You may briefly see the pod disappear and reappear — that is the container
+#     restarting, not a new pod being created
+# Press Ctrl+C once you have seen at least one restart
 
 # Inspect the events to see what happened
 kubectl describe pod liveness-demo -n lab03
