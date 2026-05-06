@@ -216,6 +216,104 @@ All list endpoints support `?page=1&limit=10`:
         ├── db/              ← client.js, schema.sql
         └── data/            ← seed.js
 ```
+## Changing the API Key or Auth Mode
+
+Both APIs read their auth configuration from environment variables. How you
+update them depends on whether you are running Docker Compose or Kubernetes.
+
+### Docker Compose
+
+The `.env.example` files in each API folder show the available variables.
+The simplest approach is to pass overrides directly in `docker-compose.yml`
+or via a `.env` file in the `05-microservices/` folder.
+
+**Change the API key:**
+
+Edit the `API_KEY` value in `docker-compose.yml` for both services:
+```yaml
+environment:
+  API_KEY: mynewkey
+```
+
+Then restart the stack to pick up the change:
+```bash
+docker compose down
+docker compose up
+```
+
+Test with the new key:
+```bash
+curl -H "x-api-key: mynewkey" http://localhost:3001/products
+curl -H "x-api-key: mynewkey" http://localhost:3002/users
+```
+
+**Disable auth entirely (dev/testing only):**
+
+Set `AUTH_MODE=none` in `docker-compose.yml` for both services:
+```yaml
+environment:
+  AUTH_MODE: none
+```
+
+Restart the stack, then calls work without any header:
+```bash
+docker compose down && docker compose up
+curl http://localhost:3001/products
+curl http://localhost:3002/users
+```
+
+---
+
+### Kubernetes
+
+In Kubernetes the API key lives in Secrets (`products-api-secret` and
+`users-api-secret`). You update the Secret and then restart the pods to
+pick up the new value.
+
+**Change the API key:**
+
+```bash
+# Update both secrets with the new key
+kubectl create secret generic products-api-secret   --from-literal=API_KEY=mynewkey   --namespace microservices   --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl create secret generic users-api-secret   --from-literal=API_KEY=mynewkey   --namespace microservices   --dry-run=client -o yaml | kubectl apply -f -
+
+# Restart both deployments to pick up the new secret value
+kubectl rollout restart deployment/products-api -n microservices
+kubectl rollout restart deployment/users-api -n microservices
+
+kubectl rollout status deployment/products-api -n microservices
+kubectl rollout status deployment/users-api -n microservices
+
+# Test with the new key
+curl -H "x-api-key: mynewkey" http://localhost:8080/products
+curl -H "x-api-key: mynewkey" http://localhost:8080/users
+```
+
+**Disable auth entirely (dev/testing only):**
+
+`AUTH_MODE` is set as a plain environment variable in the Deployment manifests,
+not in a Secret. Patch both Deployments directly:
+
+```bash
+kubectl set env deployment/products-api AUTH_MODE=none -n microservices
+kubectl set env deployment/users-api    AUTH_MODE=none -n microservices
+
+# Kubernetes automatically rolls out the change — watch it happen:
+kubectl rollout status deployment/products-api -n microservices
+
+# Calls now work without any header
+curl http://localhost:8080/products
+curl http://localhost:8080/users
+```
+
+**Restore auth:**
+
+```bash
+kubectl set env deployment/products-api AUTH_MODE=apikey -n microservices
+kubectl set env deployment/users-api    AUTH_MODE=apikey -n microservices
+```
+
 ## Cleanup
 
 **Docker Compose:**
