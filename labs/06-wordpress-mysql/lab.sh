@@ -251,13 +251,35 @@ kubectl get pods -n lab06 -w
 # Press Ctrl+C once wordpress pod shows READY 1/1
 
 # ── Step 7: Access WordPress ──────────────────────────────────────────────────
+# ── Important: set the WordPress URL before starting port-forward ────────────
+# WordPress stores the site URL in the database during setup and uses it for
+# all redirects. If it saves "localhost:8082" you will be stuck in a redirect
+# loop every time WordPress tries to send you somewhere.
+#
+# Fix: tell WordPress the correct Codespace URL BEFORE visiting the setup page.
+#
+# 1. Get your Codespace URL for port 8082 from the PORTS tab in VS Code.
+#    It looks like: https://<your-codespace-name>-8082.app.github.dev
+#    Copy it — you will need it in the next command.
+#
+# 2. Set WP_HOME and WP_SITEURL (replace the URL with your actual Codespace URL):
+kubectl set env deployment/wordpress   WORDPRESS_CONFIG_EXTRA="define('WP_HOME','https://<your-codespace-name>-8082.app.github.dev'); define('WP_SITEURL','https://<your-codespace-name>-8082.app.github.dev');"   -n lab06
+
+# Wait for the rollout to complete
+kubectl rollout status deployment/wordpress -n lab06
+
+# 3. Now start the port-forward
 kubectl port-forward svc/wordpress-svc 8082:80 -n lab06
-# Do NOT visit localhost:8082 — that won't work in a Codespace.
-# Instead open the PORTS tab in VS Code, find port 8082, and click
-# the globe icon to open the Codespace forwarded URL, which looks like:
-#   https://<your-codespace-name>-8082.app.github.dev
-# You should see the WordPress installation/setup page.
-# Complete the setup: choose a site title, admin username and password.
+
+# 4. Open the Codespace URL in your browser (the same one you used above)
+#    You should see the WordPress installation/setup page.
+#    Complete the setup: choose a site title, admin username and password.
+#    WordPress will now use your Codespace URL consistently for all redirects.
+#
+# Note: this URL is tied to your Codespace session. If you stop and restart
+# the Codespace the forwarded URL will change and you will need to update
+# WP_HOME and WP_SITEURL again using kubectl set env.
+#
 # Press Ctrl+C to stop port-forward when done
 
 # ── Step 8: Verify persistence ────────────────────────────────────────────────
