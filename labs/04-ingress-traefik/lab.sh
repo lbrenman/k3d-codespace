@@ -1,5 +1,10 @@
 # Lab 04: Ingress with Traefik
 # ─────────────────────────────────────────────────────────────────────────────
+#
+# HOW TO USE THIS LAB:
+#   Copy and paste each command block into your terminal one step at a time.
+#   Do not run this file as a script.
+#
 # k3d includes Traefik as its default ingress controller — no extra install
 # needed! This lab deploys two apps and routes to them via Ingress rules based
 # on the URL path.
