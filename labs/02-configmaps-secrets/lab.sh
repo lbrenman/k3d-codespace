@@ -129,9 +129,29 @@ kubectl logs -n lab02 $POD
 # ── Step 6: Update ConfigMap and observe ─────────────────────────────────────
 kubectl patch configmap app-config -n lab02 \
   --patch '{"data":{"LOG_LEVEL":"debug"}}'
-# Important difference:
-# - Volume mounts update automatically inside the pod (~1 min)
-# - Env vars do NOT update — the pod must be restarted to pick them up
+
+# Check the env var — it still shows "info" even after the patch
+# Env vars are injected at pod start and do NOT update live
+kubectl exec -n lab02 $POD -- env | grep LOG_LEVEL
+# Expected: LOG_LEVEL=info  (unchanged)
+
+# The volume-mounted file DOES update automatically (~60s)
+# Run this repeatedly until you see the change:
+kubectl exec -n lab02 $POD -- cat /config/welcome.txt
+# (keep running every 15s — after ~60s the content will refresh)
+
+# Once you've observed the volume mount update, restart the pod
+# to pick up the env var change:
+kubectl rollout restart deployment/config-demo -n lab02
+kubectl get pods -n lab02 -w
+# Press Ctrl+C once the new pod shows Running
+
+# Re-assign POD to the new pod name
+POD=$(kubectl get pod -n lab02 -l app=config-demo -o jsonpath='{.items[0].metadata.name}')
+
+# Now the env var reflects the updated ConfigMap value
+kubectl exec -n lab02 $POD -- env | grep LOG_LEVEL
+# Expected: LOG_LEVEL=debug
 
 # ── Step 7: Clean up ─────────────────────────────────────────────────────────
 kubectl delete namespace lab02
