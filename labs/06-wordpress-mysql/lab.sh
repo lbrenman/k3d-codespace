@@ -13,7 +13,7 @@
 #
 #   Browser
 #     │
-#     │ port-forward :8082
+#     │ :8080 (Codespace → k3d LoadBalancer → Traefik Ingress)
 #     ▼
 #   ┌──────────────────────────────────────────────────────────────────┐
 #   │  Namespace: wordpress                                            │
@@ -250,48 +250,59 @@ kubectl get pods -n lab06 -w
 # WordPress takes ~30-60s to start as it initialises the DB on first run
 # Press Ctrl+C once wordpress pod shows READY 1/1
 
-# ── Step 7: Access WordPress ──────────────────────────────────────────────────
-# ── Important: set the WordPress URL before starting port-forward ────────────
-# WordPress stores the site URL in the database during setup and uses it for
-# all redirects. If it saves "localhost:8082" you will be stuck in a redirect
-# loop every time WordPress tries to send you somewhere.
+# ── Step 7: Create an Ingress for WordPress ──────────────────────────────────
+# Instead of port-forward, we expose WordPress through the k3d Traefik Ingress
+# on port 8080. This avoids the Host header issues that cause WordPress to
+# redirect to localhost when using port-forward in a Codespace environment.
 #
-# Fix: tell WordPress the correct Codespace URL BEFORE visiting the setup page.
-#
-# 1. Get your Codespace URL for port 8082 from the PORTS tab in VS Code.
-#    It looks like: https://<your-codespace-name>-8082.app.github.dev
-#    Copy it — you will need it in the next command.
-#
-# 2. Set WP_HOME and WP_SITEURL (replace the URL with your actual Codespace URL):
-kubectl set env deployment/wordpress   WORDPRESS_CONFIG_EXTRA="define('WP_HOME','https://<your-codespace-name>-8082.app.github.dev'); define('WP_SITEURL','https://<your-codespace-name>-8082.app.github.dev');"   -n lab06
+# We use a pathPrefix of /wordpress so it doesn't conflict with other labs
+# that may be using port 8080.
+kubectl apply -n lab06 -f - <<YAML
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wordpress-ingress
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: wordpress-svc
+            port:
+              number: 80
+YAML
 
-# Wait for the rollout to complete
+# Tell WordPress to use the port 8080 Codespace URL — get it from the PORTS
+# tab in VS Code (the URL next to port 8080).
+# Replace the URL below with your actual port 8080 Codespace URL:
+kubectl set env deployment/wordpress   WORDPRESS_CONFIG_EXTRA="define('WP_HOME','https://<your-codespace-name>-8080.app.github.dev'); define('WP_SITEURL','https://<your-codespace-name>-8080.app.github.dev');"   -n lab06
+
 kubectl rollout status deployment/wordpress -n lab06
 
-# 3. Now start the port-forward
-kubectl port-forward svc/wordpress-svc 8082:80 -n lab06
-
-# 4. Open the Codespace URL in your browser (the same one you used above)
-#    You should see the WordPress installation/setup page.
-#    Complete the setup: choose a site title, admin username and password.
-#    WordPress will now use your Codespace URL consistently for all redirects.
-#
-# Note: this URL is tied to your Codespace session. If you stop and restart
-# the Codespace the forwarded URL will change and you will need to update
-# WP_HOME and WP_SITEURL again using kubectl set env.
-#
-# Press Ctrl+C to stop port-forward when done
+# Visit the port 8080 Codespace URL in your browser — open the PORTS tab,
+# find port 8080 and click the globe icon.
+# You should see the WordPress installation/setup page.
+# Complete the setup: choose a site title, admin username and password.
+# WordPress will use the Codespace URL consistently for all redirects.
 
 # ── Step 8: Verify persistence ────────────────────────────────────────────────
-# Delete the WordPress pod — Kubernetes will restart it using the same PVC
+# Delete the WordPress pod — Kubernetes will recreate it using the same PVC.
+# Unlike port-forward, the Ingress keeps working through pod restarts
+# because it routes to the Service, not directly to a pod.
 kubectl delete pod -n lab06 -l app=wordpress
 
 kubectl get pods -n lab06 -w
-# Press Ctrl+C once the new pod is READY 1/1
+# Press Ctrl+C once the new pod shows READY 1/1
 
-# Port-forward again and visit the site — your setup should still be there
-kubectl port-forward svc/wordpress-svc 8082:80 -n lab06
-# Press Ctrl+C when done
+# Visit the same port 8080 Codespace URL in your browser —
+# your WordPress setup (site title, admin account) should still be there,
+# confirming the data survived the pod restart via the PVC.
+# No need to restart port-forward — the Ingress handles it automatically.
 
 # ── Step 9: Inspect the PVCs and storage ─────────────────────────────────────
 kubectl get pvc -n lab06
