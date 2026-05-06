@@ -135,7 +135,7 @@ kubectl top pods -A
 | 03 | `03-health-checks/` | Health Checks & Probes | Foundational — every real app needs them |
 | 04 | `04-ingress-traefik/` | Ingress with Traefik | Exposing apps — natural next step |
 | 05 | `05-microservices/` | Microservices + Postgres | Real multi-service API using everything so far |
-| 06 | `06-wordpress-mysql/` | WordPress + MySQL | Real web app with persistent storage |
+| 06 | `06-gitea/` | Gitea + PostgreSQL | Real web app with persistent storage |
 | 07 | `07-autoscaling/` | Resource Limits & Autoscaling | Tune and scale apps already running |
 | 08 | `08-rolling-updates/` | Rolling Updates & Rollback | Production deploy patterns |
 | 09 | `09-helm/` | Helm + Prometheus/Grafana | Package management and monitoring |
@@ -159,8 +159,8 @@ A realistic multi-service project: two Node.js/Express REST APIs (Products and U
 
 > **Note:** Apply K8s manifests one file at a time in order — the API deployments depend on a Secret defined in `postgres.yaml`.
 
-### Lab 06 — WordPress + MySQL (`labs/06-wordpress-mysql/lab.sh`)
-Deploy a classic two-tier web app with persistent storage. Introduces PersistentVolumeClaims in a practical context and demonstrates that data survives pod restarts.
+### Lab 06 — Gitea + PostgreSQL (`labs/06-gitea/lab.sh`)
+Deploy Gitea — a lightweight self-hosted Git server — backed by PostgreSQL. Introduces PersistentVolumeClaims in a practical context and demonstrates that data (repositories, config) survives pod restarts. Access via Traefik Ingress on port 8080.
 
 ### Lab 07 — Resource Limits & Autoscaling (`labs/07-autoscaling/lab.sh`)
 Set CPU and memory requests and limits on pods, then use the Horizontal Pod Autoscaler (HPA) to scale automatically based on live CPU usage. Includes a load generator to trigger real scaling events.
