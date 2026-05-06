@@ -127,21 +127,29 @@ kubectl exec -n lab02 $POD -- cat /config/welcome.txt
 kubectl logs -n lab02 $POD
 
 # ── Step 6: Update ConfigMap and observe ─────────────────────────────────────
+# We make TWO separate patches to demonstrate the two behaviors:
+#
+# PATCH 1 — update the mounted file content (volume mounts update live)
+kubectl patch configmap app-config -n lab02 \
+  --patch '{"data":{"welcome.txt":"Welcome to the K8s lab!\nThis line was UPDATED via kubectl patch.\n"}}'
+
+# PATCH 2 — update an env var key (requires pod restart to take effect)
 kubectl patch configmap app-config -n lab02 \
   --patch '{"data":{"LOG_LEVEL":"debug"}}'
 
-# Check the env var — it still shows "info" even after the patch
-# Env vars are injected at pod start and do NOT update live
-kubectl exec -n lab02 $POD -- env | grep LOG_LEVEL
-# Expected: LOG_LEVEL=info  (unchanged)
-
-# The volume-mounted file DOES update automatically (~60s)
-# Run this repeatedly until you see the change:
+# ── Observe volume mount update (no restart needed) ───────────────────────────
+# The mounted file at /config/welcome.txt updates automatically in ~60s.
+# Run this command every 15 seconds until you see "UPDATED" in the output:
 kubectl exec -n lab02 $POD -- cat /config/welcome.txt
-# (keep running every 15s — after ~60s the content will refresh)
+# Initially shows: "Welcome to the K8s lab! / This message comes from a ConfigMap volume mount."
+# After ~60s shows: "Welcome to the K8s lab! / This line was UPDATED via kubectl patch."
 
-# Once you've observed the volume mount update, restart the pod
-# to pick up the env var change:
+# ── Observe env var NOT updating (restart required) ───────────────────────────
+# Even though we patched LOG_LEVEL to "debug", the running pod still sees "info"
+kubectl exec -n lab02 $POD -- env | grep LOG_LEVEL
+# Expected: LOG_LEVEL=info  (the old value — env vars don't update live)
+
+# ── Restart the pod to pick up the env var change ────────────────────────────
 kubectl rollout restart deployment/config-demo -n lab02
 kubectl get pods -n lab02 -w
 # Press Ctrl+C once the new pod shows Running
@@ -149,7 +157,7 @@ kubectl get pods -n lab02 -w
 # Re-assign POD to the new pod name
 POD=$(kubectl get pod -n lab02 -l app=config-demo -o jsonpath='{.items[0].metadata.name}')
 
-# Now the env var reflects the updated ConfigMap value
+# Now the env var reflects the updated value
 kubectl exec -n lab02 $POD -- env | grep LOG_LEVEL
 # Expected: LOG_LEVEL=debug
 
