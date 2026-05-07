@@ -210,10 +210,29 @@ k9s
 # Navigate to Deployments view:
 # :deploy
 # Select the "web" deployment
-# Press e            → opens the deployment YAML in your editor
-# Change replicas from 3 to 1
-# Save and close the editor
-# k9s applies the change immediately — watch the pods in :pods
+# Press e            → opens the deployment YAML in your $EDITOR
+#
+# In a Codespace, $EDITOR is typically vi. Here are the vi commands you need:
+#   Use arrow keys or j/k to move up and down
+#   Press /           → search mode — type "replicas" and press Enter to jump to it
+#   Press n           → jump to next match if needed
+#   Move cursor onto the number after "replicas:" (e.g. onto the "3")
+#
+#   Easiest approach — use r (replace single character):
+#   Press r then 1    → replaces the character under the cursor with 1, no insert mode needed
+#   Type :wq Enter    → save and quit
+#
+#   Alternative — use i (insert mode):
+#   Press i           → enter INSERT mode
+#   Use x (not Delete) to remove the old number — Delete on Mac inserts "C" in vi
+#   Type 1
+#   Press Escape      → exit INSERT mode
+#   Type :wq Enter    → save and quit
+#
+# k9s applies the change immediately — switch to :pods to watch replicas scale down
+#
+# If you want to use nano instead of vi, set your editor before launching k9s:
+#   EDITOR=nano k9s
 
 # ── Step 10: View logs across multiple pods ───────────────────────────────────
 # Navigate to Deployments view:
