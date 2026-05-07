@@ -67,20 +67,23 @@ YAML
 kubectl get pod crash-loop -n lab14
 # STATUS shows CrashLoopBackOff, RESTARTS keeps incrementing
 
-# Step 1: Check the exit code and last state
+# First — check the exit code and last state
+# This tells you WHY it crashed (exit code 1 = general error)
 kubectl describe pod crash-loop -n lab14
-# Look for:
+# Look for in the output:
 #   Last State: Terminated
 #   Exit Code: 1
 #   Reason: Error
 
-# Step 2: Read the logs from the CURRENT container
+# Then — try to read the current container logs
 kubectl logs crash-loop -n lab14
-# May be empty if the pod is in backoff — use --previous instead
+# This may return nothing if the pod is currently in backoff (waiting to restart)
+# That is normal — use --previous instead
 
-# Step 3: Read logs from the PREVIOUS (crashed) container — most useful!
+# Most useful — read logs from the PREVIOUS (crashed) container
+# --previous shows the output from the last run before it crashed
 kubectl logs crash-loop -n lab14 --previous
-# Shows: "Starting..." — the last output before it crashed
+# Shows: "Starting..." — the last thing the container printed before exiting
 
 # ── Step 4: Fix it ───────────────────────────────────────────────────────────
 kubectl delete pod crash-loop -n lab14

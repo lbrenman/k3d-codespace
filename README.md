@@ -219,6 +219,8 @@ In VS Code, open the **PORTS** tab to see forwarded ports and their public URLs.
 
 ## Troubleshooting
 
+### Cluster issues
+
 **Cluster not running after Codespace restart?**
 ```bash
 bash .devcontainer/scripts/start-cluster.sh
@@ -230,8 +232,129 @@ k3d kubeconfig merge k8s-lab --kubeconfig-switch-context
 kubectl config use-context k3d-k8s-lab
 ```
 
+**TLS certificate error when running `kubectl logs` or `kubectl exec`?**
+
+This happens when the Codespace restarts and node IPs change but the cluster certificates are not updated. Symptoms look like:
+```
+x509: certificate is valid for 172.18.0.3, not 172.18.0.2
+```
+Fix — delete and recreate the cluster entirely:
+```bash
+k3d cluster delete k8s-lab
+bash .devcontainer/scripts/start-cluster.sh
+```
+
+**Cluster nodes show NotReady after restart?**
+```bash
+# Wait ~60s then check again
+kubectl get nodes
+# If still NotReady, recreate the cluster:
+k3d cluster delete k8s-lab
+bash .devcontainer/scripts/start-cluster.sh
+```
+
+---
+
+### Pod issues
+
 **Pod stuck in Pending?**
 ```bash
 kubectl describe pod <pod-name> -n <namespace>
-# Look at the Events section at the bottom
+# Look at the Events section — common causes:
+#   "insufficient cpu/memory" → resource requests too high
+#   "no nodes available"      → cluster not running
+```
+
+**Pod in CrashLoopBackOff?**
+```bash
+# Check exit code and last state
+kubectl describe pod <pod-name> -n <namespace>
+
+# Read logs from the previous (crashed) container
+kubectl logs <pod-name> -n <namespace> --previous
+```
+
+**Pod in ImagePullBackOff?**
+```bash
+kubectl describe pod <pod-name> -n <namespace>
+# Look in Events for the specific pull error — usually a typo in the image tag
+```
+
+**CreateContainerConfigError?**
+```bash
+kubectl describe pod <pod-name> -n <namespace>
+# Usually means a referenced Secret or ConfigMap doesn't exist yet
+# Check: kubectl get secrets -n <namespace>
+#        kubectl get configmaps -n <namespace>
+```
+
+**Pod running but not responding?**
+```bash
+# Check if the Service targetPort matches the container port
+kubectl describe svc <service-name> -n <namespace>
+kubectl describe pod <pod-name> -n <namespace> | grep -A5 "Ports:"
+```
+
+---
+
+### Port forwarding issues
+
+**`kubectl port-forward` stops working after a pod restarts?**
+
+Port-forward binds to a specific pod. When the pod is deleted and recreated, the connection drops. Restart the port-forward:
+```bash
+kubectl port-forward svc/<service-name> <local-port>:<service-port> -n <namespace>
+```
+
+**Visiting `localhost:<port>` in browser gives "site can't be reached"?**
+
+In a Codespace, `localhost` in your local browser doesn't reach the Codespace. Use the forwarded URL from the **PORTS** tab in VS Code instead — it looks like:
+```
+https://<your-codespace-name>-<port>.app.github.dev
+```
+
+**Port 8080 shows the wrong app?**
+
+Multiple labs use the k3d LoadBalancer on port 8080 via Ingress. If two labs are running simultaneously with conflicting `/` path rules, traffic goes to whichever was deployed first. Either clean up the other lab's Ingress or use `kubectl port-forward` with a different port number for one of them.
+
+---
+
+### Helm issues
+
+**`helm install` fails partway through / was interrupted?**
+```bash
+# Remove the partial release and retry
+helm uninstall <release-name> -n <namespace>
+helm install ...
+```
+
+**`helm install` hangs with `--wait`?**
+```bash
+# Open a second terminal and check pod status
+kubectl get pods -n <namespace> -w
+# If pods are stuck, describe them to find the cause
+kubectl describe pod <pod-name> -n <namespace>
+```
+
+---
+
+### General diagnostic commands
+
+```bash
+# See everything in a namespace at a glance
+kubectl get all -n <namespace>
+
+# Full detail on any resource (always check Events at the bottom)
+kubectl describe <resource-type> <name> -n <namespace>
+
+# All events in a namespace sorted by time
+kubectl get events -n <namespace> --sort-by='.lastTimestamp'
+
+# Check resource usage across all pods
+kubectl top pods -A --sort-by=cpu
+kubectl top nodes
+
+# Check cluster component health
+kubectl get nodes
+kubectl get pods -n kube-system
 ```
