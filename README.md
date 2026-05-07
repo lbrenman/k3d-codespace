@@ -141,6 +141,9 @@ kubectl top pods -A
 | 09 | `09-helm/` | Helm + Prometheus/Grafana | Package management and monitoring |
 | 10 | `10-jobs-cronjobs/` | Jobs & CronJobs | Batch workloads — a distinct pattern |
 | 11 | `11-rbac/` | RBAC | Access control — ops/security topic |
+| 12 | `12-k9s/` | k9s | Terminal UI — work faster with the cluster |
+| 13 | `13-pod-filesystem/` | Pod Filesystems & Logs | Find and read log files inside containers |
+| 14 | `14-troubleshooting/` | Troubleshooting | Diagnose and fix the most common pod failures |
 
 ### Lab 01 — First Deployment (`labs/01-first-deployment/lab.md`)
 Deploy nginx, create a ClusterIP Service, port-forward and test, scale the deployment. Introduces pods, ReplicaSets, Deployments, and Services.
@@ -188,8 +191,6 @@ Learn how to find and read log files inside running containers. Covers three pat
 ### Lab 14 — Troubleshooting (`labs/14-troubleshooting/lab.md`)
 Deliberately break pods in six different ways and learn to diagnose and fix each one: CrashLoopBackOff, OOMKilled, ImagePullBackOff, Pending (scheduling failure), CreateContainerConfigError (missing Secret), and a running-but-broken service with the wrong targetPort.
 
-### Lab 13 — Pod Filesystems & Log Files (`labs/13-pod-filesystem/lab.md`)
-Learn how to inspect what's happening inside a running container. Stream stdout logs with `kubectl logs`, browse and tail file-based logs with `kubectl exec`, copy files in and out of containers with `kubectl cp`, and understand the difference between stdout logs and file-based logs. Includes a real nginx example showing both log types side by side.
 
 ## Cluster Management
 
