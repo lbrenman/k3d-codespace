@@ -230,6 +230,15 @@ kubectl run curl-client \
 kubectl get pod curl-client -n lab13 -w
 # Press Ctrl+C once Completed
 
+# Verify the traffic pod finished successfully and generated log entries
+kubectl logs curl-client -n lab13
+# Should show: "Done generating traffic"
+
+# Confirm traffic was generated before proceeding
+kubectl logs nginx-demo -n lab13 | grep "GET" | wc -l
+# Should show at least 20 lines (10 x 200 + 10 x 404 requests)
+# If it shows 0, wait a few seconds and run again
+
 # ── Step 8: Explore nginx log files ───────────────────────────────────────────
 # nginx writes access and error logs to files, not stdout (by default)
 
