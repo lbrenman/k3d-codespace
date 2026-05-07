@@ -39,8 +39,9 @@
 #   │      writes to /logs/error.log                                  │
 #   │                                                                  │
 #   │  Pod: nginx-demo (nginx web server)                             │
-#   │    /var/log/nginx/access.log   → file-based access log         │
-#   │    /var/log/nginx/error.log    → file-based error log          │
+#   │    /var/log/nginx/access.log → /dev/stdout (symlink)           │
+#   │    /var/log/nginx/error.log  → /dev/stderr (symlink)           │
+#   │    logs accessed via: kubectl logs (not kubectl exec)          │
 #   │                                                                  │
 #   └──────────────────────────────────────────────────────────────────┘
 #
@@ -239,39 +240,56 @@ kubectl logs nginx-demo -n lab13 | grep "GET" | wc -l
 # Should show at least 20 lines (10 x 200 + 10 x 404 requests)
 # If it shows 0, wait a few seconds and run again
 
-# ── Step 8: Explore nginx log files ───────────────────────────────────────────
-# nginx writes access and error logs to files, not stdout (by default)
-
-# List nginx log directory
-kubectl exec nginx-demo -n lab13 -- ls -la /var/log/nginx/
-
-# View the access log — one line per HTTP request
-kubectl exec nginx-demo -n lab13 -- cat /var/log/nginx/access.log
-
-# View the error log — contains 404s and other errors
-kubectl exec nginx-demo -n lab13 -- cat /var/log/nginx/error.log
-
-# Filter access log for 404 responses
-kubectl exec nginx-demo -n lab13 -- grep " 404 " /var/log/nginx/access.log
-
-# Count requests by status code
-kubectl exec nginx-demo -n lab13 -- \
-  awk '{print $9}' /var/log/nginx/access.log | sort | uniq -c | sort -rn
-# Shows: count of 200s, 404s, etc.
-
-# ── Step 9: Compare stdout vs file logs for nginx ────────────────────────────
-# nginx in its default Docker image symlinks logs to stdout/stderr
-# so kubectl logs also works — let's see the difference
-
-kubectl logs nginx-demo -n lab13
-# You will see the same access log entries — nginx's Docker image symlinks
-# /var/log/nginx/access.log → /dev/stdout
-# /var/log/nginx/error.log  → /dev/stderr
-# This is the recommended pattern: apps should write to stdout in containers
+# ── Step 8: Explore nginx logs ───────────────────────────────────────────────
+# The official nginx Docker image symlinks its log files to stdout/stderr:
+#   /var/log/nginx/access.log → /dev/stdout
+#   /var/log/nginx/error.log  → /dev/stderr
+#
+# This means kubectl exec -- cat /var/log/nginx/access.log returns nothing.
+# The log data flows through stdout and is captured by Kubernetes instead.
+# This is the recommended container pattern: always log to stdout.
 
 # Verify the symlinks
 kubectl exec nginx-demo -n lab13 -- ls -la /var/log/nginx/
-# You will see -> /dev/stdout and -> /dev/stderr
+# You will see: access.log -> /dev/stdout  and  error.log -> /dev/stderr
+
+# View all nginx output via kubectl logs (access + error combined)
+kubectl logs nginx-demo -n lab13
+
+# Show only the last 20 lines
+kubectl logs nginx-demo -n lab13 --tail=20
+
+# Filter for 200 responses only
+kubectl logs nginx-demo -n lab13 | grep '"GET / HTTP'
+
+# Filter for 404 responses only
+kubectl logs nginx-demo -n lab13 | grep " 404 "
+
+# Count requests by HTTP status code
+kubectl logs nginx-demo -n lab13 | awk '{print $9}' | sort | uniq -c | sort -rn
+# Shows: count of 200s, 404s, and startup notice lines
+
+# Stream nginx logs live
+kubectl logs nginx-demo -n lab13 -f
+# Press Ctrl+C to stop
+
+# ── Step 9: Key takeaway — stdout vs file logs ────────────────────────────────
+# nginx shows the modern container logging pattern: log to stdout so
+# Kubernetes captures it automatically and kubectl logs works out of the box.
+#
+# Compare this to the log-demo pod from Section A which writes BOTH to
+# stdout AND to files — you can see both approaches side by side:
+
+# stdout logs (via kubectl logs):
+kubectl logs log-demo -n lab13 --tail=5
+
+# file-based logs (via kubectl exec):
+kubectl exec log-demo -n lab13 -- tail -5 /logs/app.log
+
+# Both show the same content — the key difference is:
+#   stdout logs → always accessible via kubectl logs, survive pod restarts
+#   file logs   → require kubectl exec to access, lost on container restart
+#                 unless stored on a PVC
 
 # ── Step 10: View logs from a previous container restart ──────────────────────
 # If a container has restarted, you can view the previous container's logs
