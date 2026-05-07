@@ -186,12 +186,18 @@ k9s
 # ── Step 8: View resource usage ───────────────────────────────────────────────
 # Navigate to Nodes view:
 # :nodes
-# You will see CPU and memory usage per node, updated live.
+# You will see CPU and memory usage per node updated live (requires metrics-server,
+# which k3d includes by default).
 #
-# Navigate to Pods view with resource columns:
+# Navigate to Pods view:
 # :pods
-# Press ctrl-e       → toggle resource usage columns (CPU/MEM)
-# You can see which pods are consuming the most resources at a glance.
+# CPU and MEM columns are shown automatically when metrics-server is available.
+# Useful sorting shortcuts in the Pods view:
+#   shift-c  → sort by CPU usage (highest first)
+#   shift-m  → sort by memory usage (highest first)
+#   shift-t  → sort by number of restarts
+#   ctrl-w   → toggle wide columns (adds IP, NODE columns — like kubectl -o wide)
+# Note: ctrl-e hides/shows the header bar — it does NOT toggle resource columns.
 
 # ── Step 9: Edit a resource live ──────────────────────────────────────────────
 # Navigate to Deployments view:
