@@ -182,6 +182,12 @@ Control access using Role-Based Access Control. Create ServiceAccounts, Roles, a
 ### Lab 12 — k9s (`labs/12-k9s/lab.md`)
 Learn k9s — the terminal UI for Kubernetes. Navigate resources, stream logs, exec into containers, port-forward, edit resources live, and view cluster-wide resource usage, all without typing kubectl commands.
 
+### Lab 13 — Pod Filesystems & Logs (`labs/13-pod-filesystem/lab.md`)
+Learn how to find and read log files inside running containers. Covers three patterns: stdout logging (the Kubernetes-native approach), log files on the container filesystem accessed via kubectl exec and kubectl cp, and the sidecar pattern for streaming app log files to stdout via a shared volume.
+
+### Lab 13 — Pod Filesystems & Log Files (`labs/13-pod-filesystem/lab.md`)
+Learn how to inspect what's happening inside a running container. Stream stdout logs with `kubectl logs`, browse and tail file-based logs with `kubectl exec`, copy files in and out of containers with `kubectl cp`, and understand the difference between stdout logs and file-based logs. Includes a real nginx example showing both log types side by side.
+
 ## Cluster Management
 
 ```bash
