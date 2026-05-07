@@ -140,7 +140,6 @@ kubectl exec log-demo -n lab13 -- tail -f /logs/app.log
 kubectl exec log-demo -n lab13 -- cat /logs/error.log
 
 # Search for specific patterns with grep
-# ERROR entries are written to error.log, INFO entries to app.log
 kubectl exec log-demo -n lab13 -- grep "ERROR" /logs/error.log
 kubectl exec log-demo -n lab13 -- grep "INFO" /logs/app.log | tail -5
 
@@ -231,14 +230,12 @@ kubectl run curl-client \
 kubectl get pod curl-client -n lab13 -w
 # Press Ctrl+C once Completed
 
-# Verify the traffic pod finished successfully and generated log entries
 kubectl logs curl-client -n lab13
 # Should show: "Done generating traffic"
 
 # Confirm traffic was generated before proceeding
 kubectl logs nginx-demo -n lab13 | grep "GET" | wc -l
 # Should show at least 20 lines (10 x 200 + 10 x 404 requests)
-# If it shows 0, wait a few seconds and run again
 
 # ── Step 8: Explore nginx logs ───────────────────────────────────────────────
 # The official nginx Docker image symlinks its log files to stdout/stderr:
@@ -267,19 +264,12 @@ kubectl logs nginx-demo -n lab13 | grep " 404 "
 
 # Count requests by HTTP status code
 kubectl logs nginx-demo -n lab13 | awk '{print $9}' | sort | uniq -c | sort -rn
-# Shows: count of 200s, 404s, and startup notice lines
 
 # Stream nginx logs live
 kubectl logs nginx-demo -n lab13 -f
 # Press Ctrl+C to stop
 
 # ── Step 9: Key takeaway — stdout vs file logs ────────────────────────────────
-# nginx shows the modern container logging pattern: log to stdout so
-# Kubernetes captures it automatically and kubectl logs works out of the box.
-#
-# Compare this to the log-demo pod from Section A which writes BOTH to
-# stdout AND to files — you can see both approaches side by side:
-
 # stdout logs (via kubectl logs):
 kubectl logs log-demo -n lab13 --tail=5
 
@@ -292,17 +282,13 @@ kubectl exec log-demo -n lab13 -- tail -5 /logs/app.log
 #                 unless stored on a PVC
 
 # ── Step 10: View logs from a previous container restart ──────────────────────
-# If a container has restarted, you can view the previous container's logs
-
 kubectl logs log-demo -n lab13 -p 2>/dev/null || \
   echo "No previous container logs (pod has not restarted yet)"
 
-# To see how many times a pod has restarted:
 kubectl get pod log-demo -n lab13
 # Check the RESTARTS column
 
 # ── Step 11: View logs from multi-container pods ──────────────────────────────
-# If a pod has multiple containers, specify which one with -c
 kubectl apply -n lab13 -f - <<YAML
 apiVersion: v1
 kind: Pod

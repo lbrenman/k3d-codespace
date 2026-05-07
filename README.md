@@ -1,7 +1,5 @@
 # K3d Kubernetes Learning Environment
 
-V2
-
 A GitHub Codespace-based Kubernetes learning environment using **k3d** — fast, lightweight, and built for teaching.
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/lbrenman/k3d-codespace)
@@ -130,28 +128,55 @@ kubectl top nodes
 kubectl top pods -A
 ```
 
-| # | Folder | Topic | Rationale |
-|---|--------|-------|-----------|
-| 01 | `01-first-deployment/` | First Deployment | Core primitives first — pods, services, scaling |
-| 02 | `02-configmaps-secrets/` | ConfigMaps & Secrets | App configuration before building anything real |
-| 03 | `03-health-checks/` | Health Checks & Probes | Foundational — every real app needs them |
-| 04 | `04-ingress-traefik/` | Ingress with Traefik | Exposing apps — natural next step |
-| 05 | `05-microservices/` | Microservices + Postgres | Real multi-service API using everything so far |
-| 06 | `06-gitea/` | Gitea + PostgreSQL | Real web app with persistent storage |
-| 07 | `07-autoscaling/` | Resource Limits & Autoscaling | Tune and scale apps already running |
-| 08 | `08-rolling-updates/` | Rolling Updates & Rollback | Production deploy patterns |
-| 09 | `09-helm/` | Helm + Prometheus/Grafana | Package management and monitoring |
-| 10 | `10-jobs-cronjobs/` | Jobs & CronJobs | Batch workloads — a distinct pattern |
-| 11 | `11-rbac/` | RBAC | Access control — ops/security topic |
-| 12 | `12-k9s/` | k9s | Terminal UI — work faster with the cluster |
-| 13 | `13-pod-filesystem/` | Pod Filesystems & Logs | Find and read log files inside containers |
-| 14 | `14-troubleshooting/` | Troubleshooting | Diagnose and fix the most common pod failures |
+| # | Folder | Topic | Prerequisites |
+|---|--------|-------|---------------|
+| 01 | `01-first-deployment/` | First Deployment | None |
+| 02 | `02-configmaps-secrets/` | ConfigMaps & Secrets | Lab 01 |
+| 03 | `03-health-checks/` | Health Checks & Probes | Lab 01 |
+| 04 | `04-ingress-traefik/` | Ingress with Traefik | Labs 01–02 |
+| 05 | `05-pvcs-gitea/` | PVCs + Gitea + PostgreSQL | Labs 01–04 |
+| 06 | `06-microservices/` | Microservices + Postgres | Labs 01–05 |
+| 07 | `07-autoscaling/` | Resource Limits & Autoscaling | Labs 01–03 |
+| 08 | `08-rolling-updates/` | Rolling Updates & Rollback | Labs 01–04 |
+| 09 | `09-helm/` | Helm + Prometheus/Grafana | Labs 01–04 |
+| 10 | `10-jobs-cronjobs/` | Jobs & CronJobs | Labs 01–02 |
+| 11 | `11-rbac/` | RBAC | Labs 01–02 |
+| 12 | `12-k9s/` | k9s | Labs 01–05 |
+| 13 | `13-pod-filesystem/` | Pod Filesystems & Logs | Labs 01–03 |
+| 14 | `14-troubleshooting/` | Troubleshooting | Labs 01–07 |
+| 15 | `15-statefulsets/` | StatefulSets | Labs 01–05 |
+| 16 | `16-network-policy/` | NetworkPolicy | Labs 01–04 |
+| 17 | `17-resource-quotas/` | Resource Quotas & LimitRange | Labs 01–07 |
+
+## Concepts Map
+
+Use this table to jump directly to the lab that introduces a specific resource type or concept.
+
+| Concept | Introduced in |
+|---------|---------------|
+| Pod, Deployment, ReplicaSet, Service | Lab 01 |
+| ConfigMap, Secret, environment variables, volume mounts | Lab 02 |
+| livenessProbe, readinessProbe, startupProbe | Lab 03 |
+| Ingress, IngressController, path-based routing | Lab 04 |
+| PersistentVolume, PersistentVolumeClaim, StorageClass | Lab 05 |
+| Multi-service app, shared database, service discovery | Lab 06 |
+| Resource requests/limits, HPA, metrics-server | Lab 07 |
+| RollingUpdate, maxSurge, maxUnavailable, rollout undo | Lab 08 |
+| Helm Chart, Release, values.yaml, helm upgrade/rollback | Lab 09 |
+| Job, CronJob, completions, parallelism, backoffLimit | Lab 10 |
+| ServiceAccount, Role, RoleBinding, ClusterRole | Lab 11 |
+| k9s navigation, log streaming, port-forward from UI | Lab 12 |
+| kubectl logs, kubectl exec, kubectl cp, sidecar pattern | Lab 13 |
+| CrashLoopBackOff, OOMKilled, ImagePullBackOff, Pending | Lab 14 |
+| StatefulSet, Headless Service, volumeClaimTemplates | Lab 15 |
+| NetworkPolicy, ingress/egress rules, CNI plugins | Lab 16 |
+| ResourceQuota, LimitRange, namespace governance | Lab 17 |
 
 ### Lab 01 — First Deployment (`labs/01-first-deployment/lab.md`)
 Deploy nginx, create a ClusterIP Service, port-forward and test, scale the deployment. Introduces pods, ReplicaSets, Deployments, and Services.
 
 ### Lab 02 — ConfigMaps & Secrets (`labs/02-configmaps-secrets/lab.md`)
-Create a ConfigMap and Secret, consume both in a Deployment via env vars and volume mounts, update config and observe the difference in behavior between the two.
+Create a ConfigMap and Secret, consume both in a Deployment via env vars and volume mounts, update config and observe the difference in behavior between the two. Covers why base64 is not security and what real Secret security looks like.
 
 ### Lab 03 — Health Checks & Probes (`labs/03-health-checks/lab.md`)
 Deep dive into liveness, readiness, and startup probes. Observe a liveness failure trigger a restart, a readiness failure remove a pod from the load balancer without restarting it, and a startup probe protect a slow-starting container.
@@ -159,13 +184,13 @@ Deep dive into liveness, readiness, and startup probes. Observe a liveness failu
 ### Lab 04 — Ingress with Traefik (`labs/04-ingress-traefik/lab.md`)
 Deploy two apps and route traffic by URL path using Traefik Ingress. Access via Codespace port 8080 and explore the Traefik dashboard.
 
-### Lab 05 — Microservices + Postgres (`labs/05-microservices/`)
-A realistic multi-service project: two Node.js/Express REST APIs (Products and Users) sharing a PostgreSQL database. Deployable via Docker Compose or Kubernetes. See `labs/05-microservices/README.md` for full instructions.
+### Lab 05 — PVCs + Gitea + PostgreSQL (`labs/05-pvcs-gitea/lab.md`)
+Learn PersistentVolumeClaims by deploying Gitea (a private Git server) backed by PostgreSQL. Covers PVC access modes, late binding, the StorageClass, and persistence verification by surviving a pod restart.
+
+### Lab 06 — Microservices + Postgres (`labs/06-microservices/`)
+A realistic multi-service project: two Node.js/Express REST APIs (Products and Users) sharing a PostgreSQL database. Deployable via Docker Compose or Kubernetes. See `labs/06-microservices/README.md` for full instructions.
 
 > **Note:** Apply K8s manifests one file at a time in order — the API deployments depend on a Secret defined in `postgres.yaml`.
-
-### Lab 06 — Gitea + PostgreSQL (`labs/06-gitea/lab.md`)
-Deploy Gitea — a lightweight self-hosted Git server — backed by PostgreSQL. Introduces PersistentVolumeClaims in a practical context and demonstrates that data (repositories, config) survives pod restarts. Access via Traefik Ingress on port 8080.
 
 ### Lab 07 — Resource Limits & Autoscaling (`labs/07-autoscaling/lab.md`)
 Set CPU and memory requests and limits on pods, then use the Horizontal Pod Autoscaler (HPA) to scale automatically based on live CPU usage. Includes a load generator to trigger real scaling events.
@@ -192,6 +217,15 @@ Learn how to find and read log files inside running containers. Covers three pat
 
 ### Lab 14 — Troubleshooting (`labs/14-troubleshooting/lab.md`)
 Deliberately break pods in six different ways and learn to diagnose and fix each one: CrashLoopBackOff, OOMKilled, ImagePullBackOff, Pending (scheduling failure), CreateContainerConfigError (missing Secret), and a running-but-broken service with the wrong targetPort.
+
+### Lab 15 — StatefulSets (`labs/15-statefulsets/lab.md`)
+Learn why Deployments are wrong for databases and how StatefulSets solve the problem. Covers stable pod names, ordered startup/shutdown, Headless Services, per-pod DNS names, and volumeClaimTemplates. Converts a PostgreSQL Deployment to a StatefulSet and demonstrates stable identity across pod restarts.
+
+### Lab 16 — NetworkPolicy (`labs/16-network-policy/lab.md`)
+Control which pods can talk to which other pods. Covers the default "allow all" network model, deny-all baselines, targeted allow rules, egress restrictions, and namespace isolation. Includes an important note on CNI plugin requirements for policy enforcement.
+
+### Lab 17 — Resource Quotas & LimitRange (`labs/17-resource-quotas/lab.md`)
+Govern a shared namespace with ResourceQuota (caps total CPU, memory, pods, and objects per namespace) and LimitRange (injects default requests/limits and enforces per-container maximums). Demonstrates quota exhaustion, the multi-team isolation pattern, and how the two objects work together.
 
 
 ## Cluster Management
@@ -353,10 +387,28 @@ kubectl describe <resource-type> <name> -n <namespace>
 kubectl get events -n <namespace> --sort-by='.lastTimestamp'
 
 # Check resource usage across all pods
+# Note: requires metrics-server (pre-installed in k3d)
 kubectl top pods -A --sort-by=cpu
 kubectl top nodes
 
 # Check cluster component health
 kubectl get nodes
 kubectl get pods -n kube-system
+```
+
+**`kubectl top` returns "error: Metrics API not available"?**
+
+The metrics-server pod may not be ready yet after a cluster restart.
+```bash
+kubectl get pods -n kube-system | grep metrics-server
+# If it shows 0/1, wait ~60s and try again
+```
+If it never becomes Ready, restart it:
+```bash
+kubectl rollout restart deployment/metrics-server -n kube-system
+kubectl rollout status deployment/metrics-server -n kube-system
+```
+If `kubectl top` is unavailable, use this as a fallback to see node resource allocation:
+```bash
+kubectl describe nodes | grep -A8 "Allocated resources"
 ```

@@ -187,9 +187,16 @@ kubectl get pods -n lab08
 # Check the traffic terminal — responses are still coming from v2 pods!
 
 # ── Step 8: Roll back to v2 ───────────────────────────────────────────────────
-# Note: you may see a warning about last-applied-configuration being out of
-# sync because Step 7 used kubectl set image (imperative) rather than
-# kubectl apply (declarative). The warning is harmless — the rollback works.
+# Note: you may see a warning like:
+#   "Warning: resource deployments/web-app is missing the
+#    kubectl.kubernetes.io/last-applied-configuration annotation..."
+#
+# This annotation is the 3-way merge key that kubectl apply uses to track
+# what it applied vs. what someone else changed. kubectl set image (used in
+# Step 7) is an imperative command — it bypasses kubectl apply and skips
+# writing the annotation. The warning is harmless and the rollback works,
+# but it's a reminder: always prefer kubectl apply in production. Imperative
+# commands (set, patch, scale) break the declarative audit trail.
 kubectl rollout undo deployment/web-app -n lab08
 
 kubectl rollout status deployment/web-app -n lab08
@@ -209,9 +216,10 @@ kubectl rollout status deployment/web-app -n lab08
 # This confirms the rollback is genuine — the version text is baked into
 # the container args, not a ConfigMap, so it truly reflects the revision
 
-# ── Step 10: Pause and resume a rollout ──────────────────────────────────────
-# Pausing lets you do a canary-style partial rollout —
-# update some pods and inspect before completing the rollout.
+# ── Step 10: Pause and resume a rollout (canary pattern) ─────────────────────
+# Pausing lets you do a canary-style partial rollout — update some pods and
+# inspect before completing. This is a manual canary: you control exactly
+# how long the mixed state persists.
 
 # Start an update to v2
 kubectl apply -n lab08 -f - <<YAML
@@ -256,7 +264,17 @@ kubectl rollout pause deployment/web-app -n lab08
 
 kubectl get pods -n lab08
 # Only some pods updated — rollout is frozen mid-way
-# Traffic terminal shows a mix of v1 and v2 responses — that's the canary
+
+# Verify you can see mixed traffic (some v1, some v2):
+kubectl delete pod canary-check -n lab08 --ignore-not-found
+kubectl run canary-check \
+  --image=busybox:latest \
+  --restart=Never \
+  -n lab08 \
+  -- /bin/sh -c "for i in \$(seq 1 10); do wget -qO- http://web-svc.lab08.svc.cluster.local; done"
+kubectl logs canary-check -n lab08
+# You should see a mix of "Version 1" and "Version 2" responses — that's the canary
+kubectl delete pod canary-check -n lab08
 
 # Inspect, then resume when satisfied
 kubectl rollout resume deployment/web-app -n lab08

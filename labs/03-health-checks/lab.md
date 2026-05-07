@@ -2,8 +2,9 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Kubernetes uses three types of probes to monitor container health and decide
 # when to restart a pod, stop sending it traffic, or delay starting it.
-# You may have noticed these in Lab 05's products-api and users-api —
-# this lab explores them in depth so you understand exactly what each one does.
+# You may have noticed these in the Microservices lab's products-api and
+# users-api — this lab explores them in depth so you understand exactly what
+# each one does.
 #
 # HOW TO USE THIS LAB:
 #   Copy and paste each command block into your terminal one step at a time.
@@ -248,9 +249,9 @@ kubectl delete pod startup-demo -n lab03
 # SECTION D: Production pattern — all three probes together
 # ════════════════════════════════════════════════════════════════════════════
 #
-# This is the same pattern used in Lab 4's products-api and users-api.
-# Now that you understand each probe individually, you can see how they
-# work together in a real deployment.
+# This is the same pattern used in the Microservices lab's products-api and
+# users-api. Now that you understand each probe individually, you can see how
+# they work together in a real deployment.
 
 # ── Step 14: Deploy with all three probes ────────────────────────────────────
 kubectl apply -n lab03 -f - <<YAML

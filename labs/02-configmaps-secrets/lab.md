@@ -64,6 +64,15 @@ kubectl create secret generic app-secret \
   --from-literal=API_KEY=myapikey456 \
   -n lab02
 
+# Why base64? Kubernetes stores Secrets as JSON in etcd. Base64 lets arbitrary
+# binary data (TLS keys, certificates, binary blobs) survive the JSON encoding.
+# It is NOT security — anyone with kubectl get secret can decode it instantly.
+# Real security comes from:
+#   - RBAC: restrict which users/serviceaccounts can read Secrets
+#   - Encryption at rest: enable etcd encryption in your cluster config
+#   - External secret stores: tools like Sealed Secrets or HashiCorp Vault
+#     store the real secret outside the cluster and inject it at runtime.
+
 kubectl describe secret app-secret -n lab02
 # Note: values are hidden in describe output. Decode one manually:
 kubectl get secret app-secret -n lab02 -o jsonpath='{.data.DB_PASSWORD}' | base64 --decode
@@ -131,30 +140,36 @@ kubectl exec -n lab02 $POD -- cat /config/welcome.txt
 # View logs
 kubectl logs -n lab02 $POD
 
-# ── Step 6: Update ConfigMap and observe ─────────────────────────────────────
-# We make TWO separate patches to demonstrate the two behaviors:
-#
-# PATCH 1 — update the mounted file content (volume mounts update live)
+# ── Step 6a: Update a volume-mounted file (live reload) ───────────────────────
+# Volume-mounted ConfigMap files update automatically inside the pod — no
+# restart needed. Kubernetes re-syncs them roughly every 60 seconds.
+
 kubectl patch configmap app-config -n lab02 \
   --patch '{"data":{"welcome.txt":"Welcome to the K8s lab!\nThis line was UPDATED via kubectl patch.\n"}}'
 
-# PATCH 2 — update an env var key (requires pod restart to take effect)
+# Run this command every 15 seconds until you see "UPDATED" in the output.
+# It usually propagates within 60 seconds.
+kubectl exec -n lab02 $POD -- cat /config/welcome.txt
+# Initially: "Welcome to the K8s lab! / This message comes from a ConfigMap volume mount."
+# After ~60s: "Welcome to the K8s lab! / This line was UPDATED via kubectl patch."
+
+# ── Step 6b: Update an env var (requires pod restart) ─────────────────────────
+# Environment variables are injected at pod startup and never updated in place.
+# Even if you patch the ConfigMap, the running pod keeps the old value until
+# it is restarted.
+
 kubectl patch configmap app-config -n lab02 \
   --patch '{"data":{"LOG_LEVEL":"debug"}}'
 
-# ── Observe volume mount update (no restart needed) ───────────────────────────
-# The mounted file at /config/welcome.txt updates automatically in ~60s.
-# Run this command every 15 seconds until you see "UPDATED" in the output:
-kubectl exec -n lab02 $POD -- cat /config/welcome.txt
-# Initially shows: "Welcome to the K8s lab! / This message comes from a ConfigMap volume mount."
-# After ~60s shows: "Welcome to the K8s lab! / This line was UPDATED via kubectl patch."
+# Confirm the ConfigMap now holds "debug"
+kubectl get configmap app-config -n lab02 -o jsonpath='{.data.LOG_LEVEL}'
+echo ""
 
-# ── Observe env var NOT updating (restart required) ───────────────────────────
-# Even though we patched LOG_LEVEL to "debug", the running pod still sees "info"
+# But the running pod still sees the OLD value — env vars are pod-bound
 kubectl exec -n lab02 $POD -- env | grep LOG_LEVEL
-# Expected: LOG_LEVEL=info  (the old value — env vars don't update live)
+# Expected: LOG_LEVEL=info   ← the old value; the patch has not taken effect
 
-# ── Restart the pod to pick up the env var change ────────────────────────────
+# Restart the pod to pick up the new value
 kubectl rollout restart deployment/config-demo -n lab02
 kubectl get pods -n lab02 -w
 # Press Ctrl+C once the new pod shows Running
@@ -165,6 +180,13 @@ POD=$(kubectl get pod -n lab02 -l app=config-demo -o jsonpath='{.items[0].metada
 # Now the env var reflects the updated value
 kubectl exec -n lab02 $POD -- env | grep LOG_LEVEL
 # Expected: LOG_LEVEL=debug
+
+# ── Summary: how ConfigMap changes propagate ──────────────────────────────────
+#
+#   Update type           Propagation            How to verify
+#   ──────────────────────────────────────────────────────────────────
+#   Volume-mounted file   ~60s (automatic)       cat /config/welcome.txt
+#   Environment variable  Never (pod-bound)      Requires rollout restart
 
 # ── Step 7: Clean up ─────────────────────────────────────────────────────────
 kubectl delete namespace lab02
@@ -177,5 +199,7 @@ kubectl delete namespace lab02
 #   https://kubernetes.io/docs/concepts/configuration/secret/
 # Environment variables from ConfigMaps and Secrets:
 #   https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/
+# Encrypting Secret data at rest:
+#   https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
 # 12-Factor App config principles:
 #   https://12factor.net/config

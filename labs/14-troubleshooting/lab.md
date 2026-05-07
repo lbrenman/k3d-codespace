@@ -259,7 +259,11 @@ kubectl describe pod too-greedy -n lab14
 #   0/3 nodes are available: insufficient memory, insufficient cpu
 
 # Check what resources the nodes actually have
-kubectl top nodes
+# Note: kubectl top requires the metrics-server (pre-installed in k3d).
+# If this errors, use the fallback command below instead.
+kubectl top nodes 2>/dev/null || \
+  kubectl describe nodes | grep -A8 "Allocated resources"
+
 kubectl describe nodes | grep -A5 "Allocated resources"
 
 # ── Step 13: Fix it — use reasonable resource requests ───────────────────────
@@ -288,7 +292,8 @@ kubectl get pod too-greedy -n lab14
 # ════════════════════════════════════════════════════════════════════════════
 #
 # This error means the pod spec references a Secret or ConfigMap that
-# doesn't exist. You saw this in Lab 05 when manifests were applied out of order.
+# doesn't exist. You saw this in the Microservices lab when manifests were
+# applied out of order.
 
 # ── Step 14: Deploy a pod referencing a missing Secret ───────────────────────
 kubectl apply -n lab14 -f - <<YAML
@@ -369,6 +374,8 @@ kubectl get pods -n lab14 -w
 # Pod appears healthy — STATUS Running, RESTARTS 0
 # But requests to the service fail
 
+# Delete previous test pod if it exists (safe to re-run this step)
+kubectl delete pod test -n lab14 --ignore-not-found
 kubectl run test --image=busybox:latest --restart=Never -n lab14 \
   -- wget -qO- --timeout=5 http://wrong-port-svc.lab14.svc.cluster.local
 kubectl logs test -n lab14
@@ -385,6 +392,8 @@ kubectl describe pod -n lab14 -l app=wrong-port | grep -A3 "Ports:"
 kubectl patch svc wrong-port-svc -n lab14 \
   --patch '{"spec":{"ports":[{"port":80,"targetPort":80}]}}'
 
+# Delete previous test2 pod if it exists (safe to re-run this step)
+kubectl delete pod test2 -n lab14 --ignore-not-found
 kubectl run test2 --image=busybox:latest --restart=Never -n lab14 \
   -- wget -qO- http://wrong-port-svc.lab14.svc.cluster.local
 kubectl logs test2 -n lab14

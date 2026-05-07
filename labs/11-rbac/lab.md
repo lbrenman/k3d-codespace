@@ -146,7 +146,7 @@ spec:
     - /bin/sh
     - -c
     - |
-      echo "=== Listing pods in lab6 (should work) ==="
+      echo "=== Listing pods in lab11 (should work) ==="
       kubectl get pods -n lab11
       echo ""
       echo "=== Trying to list pods in kube-system (should fail) ==="
@@ -165,7 +165,7 @@ kubectl get pod rbac-demo -n lab11 -w
 # ── Step 8: Read the pod output ───────────────────────────────────────────────
 kubectl logs rbac-demo -n lab11
 # You should see:
-#   ✅ pod list succeeds in lab6
+#   ✅ pod list succeeds in lab11
 #   ❌ pod list fails in kube-system
 #   ❌ delete fails
 
