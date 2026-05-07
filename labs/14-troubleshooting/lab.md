@@ -112,6 +112,8 @@ kubectl get pod crash-loop -n lab14
 # It often manifests as CrashLoopBackOff with exit code 137.
 
 # ── Step 5: Deploy a pod that exceeds its memory limit ───────────────────────
+# We use Python to allocate a large byte array instantly — much more reliable
+# than a shell loop for triggering OOMKill quickly and consistently.
 kubectl apply -n lab14 -f - <<YAML
 apiVersion: v1
 kind: Pod
@@ -120,26 +122,29 @@ metadata:
 spec:
   containers:
   - name: app
-    image: busybox:latest
+    image: python:3-alpine
     command:
-    - /bin/sh
+    - python3
     - -c
     - |
-      echo "Allocating memory..."
-      # Fill memory by writing to a variable — will exceed the 5Mi limit
-      data=""
-      while true; do
-        data="${data}$(head -c 1024 /dev/urandom | tr -dc 'a-z')"
-      done
+      print("Allocating memory...")
+      # Allocate 50MB instantly — well over the 20Mi limit
+      x = bytearray(50 * 1024 * 1024)
+      print("Done — should have been killed by now")
     resources:
       limits:
-        memory: 5Mi    # Very low limit — will be exceeded quickly
+        memory: 20Mi
 YAML
 
 # ── Step 6: Diagnose OOMKilled ───────────────────────────────────────────────
+# OOMKill happens almost instantly — by the time you run the next command
+# the pod may already show OOMKilled or CrashLoopBackOff
+kubectl get pod oom-demo -n lab14
+# If STATUS shows OOMKilled or CrashLoopBackOff with RESTARTS > 0, it worked
+
+# Watch mode if you want to see it happen live (run immediately after Step 5):
 kubectl get pod oom-demo -n lab14 -w
-# Watch for OOMKilled in the STATUS column
-# Press Ctrl+C once you see it
+# Press Ctrl+C once you see OOMKilled or CrashLoopBackOff
 
 kubectl describe pod oom-demo -n lab14
 # Look for:
@@ -148,7 +153,9 @@ kubectl describe pod oom-demo -n lab14
 #   Exit Code: 137
 
 kubectl logs oom-demo -n lab14 --previous
-# Shows: "Allocating memory..." — last output before being killed
+# May show "Allocating memory..." or may be empty/error — this is normal.
+# OOMKill happens so abruptly that the kernel kills the process before it
+# can flush its log buffer. The definitive proof is in kubectl describe, not logs.
 
 # ── Step 7: Fix it — increase the memory limit ───────────────────────────────
 kubectl delete pod oom-demo -n lab14
