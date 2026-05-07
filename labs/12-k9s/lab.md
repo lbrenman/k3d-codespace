@@ -192,12 +192,19 @@ k9s
 # Navigate to Pods view:
 # :pods
 # CPU and MEM columns are shown automatically when metrics-server is available.
-# Useful sorting shortcuts in the Pods view:
-#   shift-c  → sort by CPU usage (highest first)
-#   shift-m  → sort by memory usage (highest first)
-#   shift-t  → sort by number of restarts
-#   ctrl-w   → toggle wide columns (adds IP, NODE columns — like kubectl -o wide)
-# Note: ctrl-e hides/shows the header bar — it does NOT toggle resource columns.
+#
+# Useful column and sort shortcuts in the Pods view:
+#   ctrl-w   → toggle wide columns (adds IP, NODE — like kubectl -o wide)
+#   shift-n  → sort by name
+#   shift-a  → sort by age
+#   shift-s  → sort by status
+#   shift-o  → sort by node
+#
+# Note: shift-c and shift-m (sort by CPU/memory) are documented but have a
+# known bug in recent k9s versions — use :top pod from the terminal instead:
+#   ctrl-c to exit k9s temporarily, then:
+#   kubectl top pods -A --sort-by=cpu
+#   kubectl top pods -A --sort-by=memory
 
 # ── Step 9: Edit a resource live ──────────────────────────────────────────────
 # Navigate to Deployments view:
