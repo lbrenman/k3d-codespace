@@ -185,6 +185,9 @@ Learn k9s — the terminal UI for Kubernetes. Navigate resources, stream logs, e
 ### Lab 13 — Pod Filesystems & Logs (`labs/13-pod-filesystem/lab.md`)
 Learn how to find and read log files inside running containers. Covers three patterns: stdout logging (the Kubernetes-native approach), log files on the container filesystem accessed via kubectl exec and kubectl cp, and the sidecar pattern for streaming app log files to stdout via a shared volume.
 
+### Lab 14 — Troubleshooting (`labs/14-troubleshooting/lab.md`)
+Deliberately break pods in six different ways and learn to diagnose and fix each one: CrashLoopBackOff, OOMKilled, ImagePullBackOff, Pending (scheduling failure), CreateContainerConfigError (missing Secret), and a running-but-broken service with the wrong targetPort.
+
 ### Lab 13 — Pod Filesystems & Log Files (`labs/13-pod-filesystem/lab.md`)
 Learn how to inspect what's happening inside a running container. Stream stdout logs with `kubectl logs`, browse and tail file-based logs with `kubectl exec`, copy files in and out of containers with `kubectl cp`, and understand the difference between stdout logs and file-based logs. Includes a real nginx example showing both log types side by side.
 
