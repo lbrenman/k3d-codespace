@@ -142,16 +142,16 @@ kubectl top pods -A
 | 10 | `10-jobs-cronjobs/` | Jobs & CronJobs | Batch workloads — a distinct pattern |
 | 11 | `11-rbac/` | RBAC | Access control — ops/security topic |
 
-### Lab 01 — First Deployment (`labs/01-first-deployment/lab.sh`)
+### Lab 01 — First Deployment (`labs/01-first-deployment/lab.md`)
 Deploy nginx, create a ClusterIP Service, port-forward and test, scale the deployment. Introduces pods, ReplicaSets, Deployments, and Services.
 
-### Lab 02 — ConfigMaps & Secrets (`labs/02-configmaps-secrets/lab.sh`)
+### Lab 02 — ConfigMaps & Secrets (`labs/02-configmaps-secrets/lab.md`)
 Create a ConfigMap and Secret, consume both in a Deployment via env vars and volume mounts, update config and observe the difference in behavior between the two.
 
-### Lab 03 — Health Checks & Probes (`labs/03-health-checks/lab.sh`)
+### Lab 03 — Health Checks & Probes (`labs/03-health-checks/lab.md`)
 Deep dive into liveness, readiness, and startup probes. Observe a liveness failure trigger a restart, a readiness failure remove a pod from the load balancer without restarting it, and a startup probe protect a slow-starting container.
 
-### Lab 04 — Ingress with Traefik (`labs/04-ingress-traefik/lab.sh`)
+### Lab 04 — Ingress with Traefik (`labs/04-ingress-traefik/lab.md`)
 Deploy two apps and route traffic by URL path using Traefik Ingress. Access via Codespace port 8080 and explore the Traefik dashboard.
 
 ### Lab 05 — Microservices + Postgres (`labs/05-microservices/`)
@@ -159,24 +159,24 @@ A realistic multi-service project: two Node.js/Express REST APIs (Products and U
 
 > **Note:** Apply K8s manifests one file at a time in order — the API deployments depend on a Secret defined in `postgres.yaml`.
 
-### Lab 06 — Gitea + PostgreSQL (`labs/06-gitea/lab.sh`)
+### Lab 06 — Gitea + PostgreSQL (`labs/06-gitea/lab.md`)
 Deploy Gitea — a lightweight self-hosted Git server — backed by PostgreSQL. Introduces PersistentVolumeClaims in a practical context and demonstrates that data (repositories, config) survives pod restarts. Access via Traefik Ingress on port 8080.
 
-### Lab 07 — Resource Limits & Autoscaling (`labs/07-autoscaling/lab.sh`)
+### Lab 07 — Resource Limits & Autoscaling (`labs/07-autoscaling/lab.md`)
 Set CPU and memory requests and limits on pods, then use the Horizontal Pod Autoscaler (HPA) to scale automatically based on live CPU usage. Includes a load generator to trigger real scaling events.
 
-### Lab 08 — Rolling Updates & Rollback (`labs/08-rolling-updates/lab.sh`)
+### Lab 08 — Rolling Updates & Rollback (`labs/08-rolling-updates/lab.md`)
 Deploy a 4-replica app, stream live traffic through it, perform a rolling update, simulate a broken release, and roll back — all while the service stays up. Also covers pausing rollouts for canary-style deploys.
 
-### Lab 09 — Helm + Prometheus/Grafana (`labs/09-helm/lab.sh`)
+### Lab 09 — Helm + Prometheus/Grafana (`labs/09-helm/lab.md`)
 Learn Helm — the Kubernetes package manager. Install the kube-prometheus-stack chart, customize it with a `values.yaml` and `--set` flags, upgrade, roll back, and inspect chart templates.
 
 > **Note:** Run from inside `labs/09-helm/` — the lab creates a `values.yaml` file in the current directory.
 
-### Lab 10 — Jobs & CronJobs (`labs/10-jobs-cronjobs/lab.sh`)
+### Lab 10 — Jobs & CronJobs (`labs/10-jobs-cronjobs/lab.md`)
 Run a one-off Job to completion, process work in parallel, schedule recurring tasks with a CronJob, manually trigger runs, suspend and resume schedules, and observe retry behavior on failure.
 
-### Lab 11 — RBAC (`labs/11-rbac/lab.sh`)
+### Lab 11 — RBAC (`labs/11-rbac/lab.md`)
 Control access using Role-Based Access Control. Create ServiceAccounts, Roles, and RoleBindings, verify permissions with `kubectl auth can-i`, and observe a pod interacting with the K8s API using its ServiceAccount token.
 
 ## Cluster Management
