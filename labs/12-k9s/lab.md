@@ -177,7 +177,11 @@ k9s
 #
 # Open the PORTS tab in VS Code — port 8090 will appear.
 # Click the globe icon to open it in your browser.
-# Press esc in k9s to stop the port-forward when done.
+#
+# To stop the port-forward from inside k9s:
+#   Press : → type "pf" → enter   (opens the Port Forwards view)
+#   Select the port-forward
+#   Press ctrl-d to delete/stop it
 
 # ── Step 8: View resource usage ───────────────────────────────────────────────
 # Navigate to Nodes view:
