@@ -125,8 +125,9 @@ kubectl get all -n monitoring
 # Run this in a terminal, then open port 9090 in your browser
 kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
 # Try in the UI:
-#   Status → Targets  (see what Prometheus is scraping)
-#   Graph → type "up" and click Execute (shows all healthy targets)
+#   Status → Targets   — shows all scrape targets and their health (up/down)
+#   Query → type "up" and click Execute — shows 1 for each healthy target
+#            (Note: the old "Graph" tab was renamed to "Query" in Prometheus 3.0)
 # Press Ctrl+C to stop port-forward when done
 
 # ── Step 10: Access Grafana UI ────────────────────────────────────────────────

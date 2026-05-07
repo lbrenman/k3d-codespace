@@ -179,6 +179,9 @@ Run a one-off Job to completion, process work in parallel, schedule recurring ta
 ### Lab 11 — RBAC (`labs/11-rbac/lab.md`)
 Control access using Role-Based Access Control. Create ServiceAccounts, Roles, and RoleBindings, verify permissions with `kubectl auth can-i`, and observe a pod interacting with the K8s API using its ServiceAccount token.
 
+### Lab 12 — k9s (`labs/12-k9s/lab.md`)
+Learn k9s — the terminal UI for Kubernetes. Navigate resources, stream logs, exec into containers, port-forward, edit resources live, and view cluster-wide resource usage, all without typing kubectl commands.
+
 ## Cluster Management
 
 ```bash
