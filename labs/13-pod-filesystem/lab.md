@@ -139,7 +139,9 @@ kubectl exec log-demo -n lab13 -- tail -f /logs/app.log
 kubectl exec log-demo -n lab13 -- cat /logs/error.log
 
 # Search for specific patterns with grep
-kubectl exec log-demo -n lab13 -- grep "ERROR" /logs/app.log
+# ERROR entries are written to error.log, INFO entries to app.log
+kubectl exec log-demo -n lab13 -- grep "ERROR" /logs/error.log
+kubectl exec log-demo -n lab13 -- grep "INFO" /logs/app.log | tail -5
 
 # Count lines in the log file
 kubectl exec log-demo -n lab13 -- wc -l /logs/app.log
