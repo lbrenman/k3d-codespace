@@ -140,14 +140,7 @@ curl -s -X POST \
   -d '{"name":"Frank Muller","email":"frank@example.com","role":"customer"}' \
   http://localhost:8080/users | jq .
 
-# ── Step 9: Test health endpoints (no auth required) ──────────────────────────
-curl -s http://localhost:8080/products/health | jq .
-# Expected: {"status":"ok","service":"products-api","version":"1.0.0",...}
-
-curl -s http://localhost:8080/users/health | jq .
-# Expected: {"status":"ok","service":"users-api","version":"1.0.0",...}
-
-# ── Step 10: Test authentication ───────────────────────────────────────────────
+# ── Step 9: Test authentication ───────────────────────────────────────────────
 # Missing API key → 401
 curl -s http://localhost:8080/products | jq .
 # Expected: {"error":"Unauthorized — invalid or missing x-api-key header"}
