@@ -145,8 +145,7 @@ kubectl top pods -A
 | 13 | `13-pod-filesystem/` | Pod Filesystems & Logs | Labs 01–03 |
 | 14 | `14-troubleshooting/` | Troubleshooting | Labs 01–07 |
 | 15 | `15-statefulsets/` | StatefulSets | Labs 01–05 |
-| 16 | `16-network-policy/` | NetworkPolicy | Labs 01–04 |
-| 17 | `17-resource-quotas/` | Resource Quotas & LimitRange | Labs 01–07 |
+| 16 | `16-resource-quotas/` | Resource Quotas & LimitRange | Labs 01–07 |
 
 ## Concepts Map
 
@@ -169,8 +168,7 @@ Use this table to jump directly to the lab that introduces a specific resource t
 | kubectl logs, kubectl exec, kubectl cp, sidecar pattern | Lab 13 |
 | CrashLoopBackOff, OOMKilled, ImagePullBackOff, Pending | Lab 14 |
 | StatefulSet, Headless Service, volumeClaimTemplates | Lab 15 |
-| NetworkPolicy, ingress/egress rules, CNI plugins | Lab 16 |
-| ResourceQuota, LimitRange, namespace governance | Lab 17 |
+| ResourceQuota, LimitRange, namespace governance | Lab 16 |
 
 ### Lab 01 — First Deployment (`labs/01-first-deployment/lab.md`)
 Deploy nginx, create a ClusterIP Service, port-forward and test, scale the deployment. Introduces pods, ReplicaSets, Deployments, and Services.
@@ -221,10 +219,7 @@ Deliberately break pods in six different ways and learn to diagnose and fix each
 ### Lab 15 — StatefulSets (`labs/15-statefulsets/lab.md`)
 Learn why Deployments are wrong for databases and how StatefulSets solve the problem. Covers stable pod names, ordered startup/shutdown, Headless Services, per-pod DNS names, and volumeClaimTemplates. Converts a PostgreSQL Deployment to a StatefulSet and demonstrates stable identity across pod restarts.
 
-### Lab 16 — NetworkPolicy (`labs/16-network-policy/lab.md`)
-Control which pods can talk to which other pods. Covers the default "allow all" network model, deny-all baselines, targeted allow rules, egress restrictions, and namespace isolation. Includes an important note on CNI plugin requirements for policy enforcement.
-
-### Lab 17 — Resource Quotas & LimitRange (`labs/17-resource-quotas/lab.md`)
+### Lab 16 — Resource Quotas & LimitRange (`labs/16-resource-quotas/lab.md`)
 Govern a shared namespace with ResourceQuota (caps total CPU, memory, pods, and objects per namespace) and LimitRange (injects default requests/limits and enforces per-container maximums). Demonstrates quota exhaustion, the multi-team isolation pattern, and how the two objects work together.
 
 

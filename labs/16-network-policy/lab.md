@@ -12,22 +12,20 @@
 #   Copy and paste each command block into your terminal one step at a time.
 #   Do not run this file as a script.
 #
-# ── Important: CNI requirement ───────────────────────────────────────────────
-# NetworkPolicy objects are enforced by the cluster's CNI (Container Network
-# Interface) plugin — not by Kubernetes itself. If the CNI doesn't support
-# NetworkPolicy, the YAML applies without error but has no effect.
+# ── How NetworkPolicy enforcement works in k3d ───────────────────────────────
+# NetworkPolicy enforcement is a common source of confusion, so it's worth
+# understanding exactly what's running in this cluster:
 #
-# k3d's default CNI is Flannel (via k3s), which does NOT enforce NetworkPolicy.
-# This lab demonstrates the API and mental model. In the enforcement steps you
-# will apply policies, verify the objects exist, and observe what WOULD be
-# blocked. A note marks each place where a NetworkPolicy-capable CNI (Calico,
-# Cilium, Weave) would enforce the rule.
+#   Flannel    — the default CNI plugin used by k3s/k3d for pod networking.
+#                Flannel handles IP assignment and routing between pods.
+#                Flannel itself does NOT enforce NetworkPolicy.
 #
-# To use a NetworkPolicy-enforcing setup with k3d:
-#   k3d cluster create k8s-lab \
-#     --k3s-arg "--flannel-backend=none@server:*" \
-#     --k3s-arg "--disable=traefik@server:*"
-#   # Then install Calico or Cilium manually
+#   kube-router — a separate network policy controller bundled with k3s.
+#                 It runs automatically alongside Flannel and enforces
+#                 NetworkPolicy objects using iptables rules on each node.
+#
+# Result: k3d enforces NetworkPolicy out of the box. Policies you apply in
+# this lab will produce real blocking behaviour — no extra setup needed.
 #
 # What you will build:
 #
@@ -47,12 +45,14 @@
 #   └──────────────────────────────────────────────────────────────────┘
 #
 # Key concepts: NetworkPolicy, ingress rules, egress rules, podSelector,
-#               namespaceSelector, deny-all baseline, CNI plugins
+#               namespaceSelector, deny-all baseline, kube-router, CNI plugins
 
 # ── Step 1: Create namespace ──────────────────────────────────────────────────
 kubectl create namespace lab16
 
-# ── Step 2: Deploy three pods representing a 3-tier app ──────────────────────
+# ── Step 2: Deploy pods and Services representing a 3-tier app ───────────────
+# Services are created here alongside the pods so that DNS names like
+# "database" and "backend" resolve immediately in subsequent steps.
 kubectl apply -n lab16 -f - <<YAML
 # Frontend — the only entry point for user traffic
 apiVersion: v1
@@ -68,6 +68,16 @@ spec:
     image: nginx:alpine
     ports:
     - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  selector:
+    app: frontend
+  ports:
+  - port: 80
 ---
 # Backend — processes requests from the frontend
 apiVersion: v1
@@ -85,6 +95,16 @@ spec:
     ports:
     - containerPort: 8080
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  selector:
+    app: backend
+  ports:
+  - port: 8080
+---
 # Database — should only accept connections from the backend
 apiVersion: v1
 kind: Pod
@@ -99,6 +119,16 @@ spec:
     image: nginx:alpine   # Simulating a database with a simple HTTP server
     ports:
     - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: database
+spec:
+  selector:
+    app: database
+  ports:
+  - port: 80
 ---
 # Attacker — simulates a compromised pod trying to reach the database directly
 apiVersion: v1
@@ -120,29 +150,17 @@ kubectl get pods -n lab16 -w
 # ── Step 3: Verify default behaviour — everything can reach everything ────────
 # Before any NetworkPolicy is applied, all pods can reach all other pods.
 # This is Kubernetes' default "flat network" model.
-
-# Attacker can reach the database — this is the problem we will fix
-kubectl exec attacker -n lab16 -- \
-  wget -qO- --timeout=3 http://database.lab16.svc.cluster.local 2>/dev/null \
-  && echo "SUCCESS: attacker reached database" \
-  || echo "FAILED: could not reach database"
-# Expected before policy: SUCCESS
-
-# We need a Service for DNS to work — add simple ClusterIP services
-kubectl expose pod database -n lab16 --port=80 --name=database
-kubectl expose pod backend   -n lab16 --port=8080 --name=backend
-kubectl expose pod frontend  -n lab16 --port=80 --name=frontend
-
-# Confirm the attacker can freely reach the database
+# The attacker can freely reach the database — this is the problem we will fix.
 kubectl exec attacker -n lab16 -- \
   wget -qO- --timeout=3 http://database 2>/dev/null \
   && echo "✓ Attacker reached database (no policy yet — expected)" \
   || echo "✗ Could not reach database"
+# Expected: ✓ Attacker reached database
 
 # ── Step 4: Apply a deny-all ingress baseline to the database ─────────────────
-# The foundation of network security: start with "deny everything" and
-# then explicitly allow only what is needed. An empty podSelector ({}) with
-# no ingress rules means: select this pod, allow zero ingress traffic.
+# The foundation of network security: start with "deny everything" and then
+# explicitly allow only what is needed.
+# An empty ingress list means: select this pod, allow zero ingress traffic.
 kubectl apply -n lab16 -f - <<YAML
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -153,24 +171,23 @@ spec:
     matchLabels:
       tier: database    # Apply to the database pod
   policyTypes:
-  - Ingress             # Block all incoming connections
+  - Ingress             # Control incoming connections
   ingress: []           # Empty list = deny all ingress
 YAML
 
 kubectl get networkpolicy -n lab16
 # Shows the policy exists
 
-# In a cluster with a NetworkPolicy-capable CNI (Calico, Cilium, Weave),
-# the attacker would now be blocked. With k3d's default Flannel CNI,
-# the policy exists but is not enforced — the connection still succeeds.
+# kube-router enforces this immediately via iptables — the attacker is blocked.
 kubectl exec attacker -n lab16 -- \
   wget -qO- --timeout=3 http://database 2>/dev/null \
-  && echo "reached database (Flannel does not enforce NetworkPolicy)" \
-  || echo "blocked — NetworkPolicy is being enforced (Calico/Cilium CNI)"
+  && echo "✗ Reached database (unexpected)" \
+  || echo "✓ Blocked — deny-all policy is enforced"
+# Expected: ✓ Blocked — deny-all policy is enforced
 
 # ── Step 5: Allow backend → database traffic ──────────────────────────────────
-# Now add a specific allow rule on top of the deny-all baseline.
-# Only pods with tier=backend can connect to the database on port 80.
+# Add a specific allow rule on top of the deny-all baseline.
+# Only pods labelled tier=backend can connect to the database on port 80.
 kubectl apply -n lab16 -f - <<YAML
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -196,8 +213,19 @@ kubectl get networkpolicy -n lab16
 # Both policies are listed. They are additive: deny-all + allow-backend
 # means only backend traffic is permitted.
 
+# Verify: backend can reach database, attacker still cannot
+kubectl exec backend -n lab16 -- \
+  wget -qO- --timeout=3 http://database 2>/dev/null \
+  && echo "✓ backend → database: allowed" \
+  || echo "✗ backend → database: blocked (unexpected)"
+
+kubectl exec attacker -n lab16 -- \
+  wget -qO- --timeout=3 http://database 2>/dev/null \
+  && echo "✗ attacker → database: allowed (unexpected)" \
+  || echo "✓ attacker → database: blocked"
+
 # ── Step 6: Allow frontend → backend traffic ──────────────────────────────────
-# Apply the same pattern to the backend: deny all, allow only from frontend.
+# Apply the same deny-all + targeted-allow pattern to the backend tier.
 kubectl apply -n lab16 -f - <<YAML
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -231,6 +259,17 @@ spec:
       port: 8080
 YAML
 
+# Verify: frontend can reach backend, attacker cannot
+kubectl exec frontend -n lab16 -- \
+  wget -qO- --timeout=3 http://backend:8080 2>/dev/null \
+  && echo "✓ frontend → backend: allowed" \
+  || echo "✗ frontend → backend: blocked (unexpected)"
+
+kubectl exec attacker -n lab16 -- \
+  wget -qO- --timeout=3 http://backend:8080 2>/dev/null \
+  && echo "✗ attacker → backend: allowed (unexpected)" \
+  || echo "✓ attacker → backend: blocked"
+
 # ── Step 7: Inspect all NetworkPolicy objects ─────────────────────────────────
 kubectl get networkpolicies -n lab16
 # Four policies: two deny-alls, two allow-specific
@@ -239,9 +278,10 @@ kubectl describe networkpolicy database-allow-backend -n lab16
 # Shows: pod selector, ingress rules, allowed source labels and ports
 
 # ── Step 8: Restrict egress — prevent pods from calling the internet ──────────
-# By default pods can make outbound connections to anywhere — including the
-# internet. The following policy restricts the backend to only talk to the
-# database, and to the cluster's DNS server (required for name resolution).
+# By default pods can make outbound connections anywhere, including the
+# internet. This policy restricts the backend to only talk to the database
+# and the cluster's DNS server. The DNS allowance (port 53) is essential —
+# without it, wget http://database would fail because DNS is blocked.
 kubectl apply -n lab16 -f - <<YAML
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -268,11 +308,22 @@ spec:
       port: 53
 YAML
 
+# Verify backend can still reach database (allowed by egress policy)
+kubectl exec backend -n lab16 -- \
+  wget -qO- --timeout=3 http://database 2>/dev/null \
+  && echo "✓ backend → database: allowed" \
+  || echo "✗ backend → database: blocked (check egress policy)"
+
+# Verify backend cannot reach the internet (blocked by egress policy)
+kubectl exec backend -n lab16 -- \
+  wget -qO- --timeout=3 http://example.com 2>/dev/null \
+  && echo "✗ backend → internet: allowed (unexpected)" \
+  || echo "✓ backend → internet: blocked"
+
 # ── Step 9: Namespace-scoped policies ─────────────────────────────────────────
 # You can also restrict traffic between namespaces. This policy allows
-# traffic into lab16 only from other pods in lab16 (or pods in namespaces
-# labelled environment=production). This prevents other namespaces in the
-# cluster from probing your services.
+# ingress into lab16 only from pods within lab16 itself, or from namespaces
+# labelled environment=production — blocking probes from other lab namespaces.
 kubectl apply -n lab16 -f - <<YAML
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -293,8 +344,8 @@ YAML
 kubectl get networkpolicies -n lab16
 # All five policies listed
 
-# ── Step 10: Policy summary — what is allowed ─────────────────────────────────
-# After all policies are applied:
+# ── Step 10: Policy summary — what is enforced ───────────────────────────────
+# After all policies are applied, kube-router enforces these rules:
 #
 #   From           To           Port    Result
 #   ─────────────────────────────────────────────────────────────────────
@@ -303,27 +354,9 @@ kubectl get networkpolicies -n lab16
 #   backend        database     80      ✓ allowed (database-allow-backend)
 #   attacker       database     80      ✗ blocked (database-deny-all)
 #   attacker       backend      8080    ✗ blocked (backend-deny-all)
-#   backend        internet     any     ✗ blocked (backend-egress restricts to db + DNS)
-#
-# Note: With k3d/Flannel these policies are not enforced. In a production
-# cluster with Calico or Cilium, all ✗ rows would result in connection refused.
+#   backend        internet     any     ✗ blocked (backend-egress)
 
-# ── Step 11: Test with a NetworkPolicy-aware CNI (reference) ─────────────────
-# If you are running this lab with a NetworkPolicy-enforcing CNI:
-#
-# This should succeed (allowed by policy):
-kubectl exec frontend -n lab16 -- \
-  wget -qO- --timeout=3 http://backend:8080 2>/dev/null \
-  && echo "frontend → backend: allowed" \
-  || echo "frontend → backend: blocked"
-#
-# This should be blocked (no policy allows it):
-kubectl exec attacker -n lab16 -- \
-  wget -qO- --timeout=3 http://database 2>/dev/null \
-  && echo "attacker → database: allowed (CNI not enforcing)" \
-  || echo "attacker → database: BLOCKED (policy enforced)"
-
-# ── Step 12: Clean up ────────────────────────────────────────────────────────
+# ── Step 11: Clean up ────────────────────────────────────────────────────────
 kubectl delete namespace lab16
 
 
@@ -332,9 +365,7 @@ kubectl delete namespace lab16
 #   https://kubernetes.io/docs/concepts/services-networking/network-policies/
 # NetworkPolicy recipes (deny-all, allow-same-namespace, etc.):
 #   https://github.com/ahmetb/kubernetes-network-policy-recipes
+# k3s network policy support (kube-router):
+#   https://www.suse.com/c/rancher_blog/k3s-network-policy/
 # Choosing a CNI plugin:
 #   https://kubernetes.io/docs/concepts/cluster-administration/networking/
-# Calico NetworkPolicy documentation:
-#   https://docs.tigera.io/calico/latest/network-policy/
-# Cilium NetworkPolicy documentation:
-#   https://docs.cilium.io/en/stable/network/kubernetes/policy/
