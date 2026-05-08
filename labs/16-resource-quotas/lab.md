@@ -1,4 +1,4 @@
-# Lab 17: Resource Quotas & LimitRange — Namespace Governance
+# Lab 16: Resource Quotas & LimitRange — Namespace Governance
 # ─────────────────────────────────────────────────────────────────────────────
 # Lab 07 covered per-pod resource requests and limits. But in a shared cluster
 # used by multiple teams, you also need to cap total namespace consumption.
@@ -19,7 +19,7 @@
 # What you will build:
 #
 #   ┌──────────────────────────────────────────────────────────────────┐
-#   │  Namespace: lab17                                                │
+#   │  Namespace: lab16                                                │
 #   │                                                                  │
 #   │  ResourceQuota: team-quota                                      │
 #   │    cpu:     4 cores total across all pods                       │
@@ -38,13 +38,13 @@
 #               quota enforcement, namespace governance
 
 # ── Step 1: Create namespace ──────────────────────────────────────────────────
-kubectl create namespace lab17
+kubectl create namespace lab16
 
 # ── Step 2: Create a ResourceQuota ───────────────────────────────────────────
 # ResourceQuota caps the total resources that can be consumed across all pods
 # and objects in the namespace. Once a quota is set, every pod MUST declare
 # requests and limits — Kubernetes rejects pods without them.
-kubectl apply -n lab17 -f - <<YAML
+kubectl apply -n lab16 -f - <<YAML
 apiVersion: v1
 kind: ResourceQuota
 metadata:
@@ -63,7 +63,7 @@ spec:
     persistentvolumeclaims: "4" # Maximum number of PVCs
 YAML
 
-kubectl describe resourcequota team-quota -n lab17
+kubectl describe resourcequota team-quota -n lab16
 # Shows "Hard" (the cap) and "Used" (current consumption) for each resource
 
 # ── Step 3: Observe quota enforcement — pod without resources is rejected ─────
@@ -71,7 +71,7 @@ kubectl describe resourcequota team-quota -n lab17
 # Without them, the API server rejects the pod immediately.
 kubectl run no-resources \
   --image=nginx:alpine \
-  -n lab17
+  -n lab16
 # Expected error:
 #   Error from server (Forbidden): pods "no-resources" is forbidden:
 #   failed quota: team-quota: must specify limits.cpu,limits.memory,
@@ -81,7 +81,7 @@ kubectl run no-resources \
 # LimitRange solves the rejection problem: it injects default requests and
 # limits into any pod that doesn't declare them. It also sets hard maximums
 # so no single pod can claim more than its share.
-kubectl apply -n lab17 -f - <<YAML
+kubectl apply -n lab16 -f - <<YAML
 apiVersion: v1
 kind: LimitRange
 metadata:
@@ -103,30 +103,30 @@ spec:
       memory: 64Mi
 YAML
 
-kubectl describe limitrange default-limits -n lab17
+kubectl describe limitrange default-limits -n lab16
 # Shows default, defaultRequest, max, and min for containers
 
 # ── Step 5: LimitRange injects defaults silently ──────────────────────────────
 # Now a pod without explicit resources is accepted — LimitRange fills them in.
 kubectl run auto-defaults \
   --image=nginx:alpine \
-  -n lab17
-kubectl get pod auto-defaults -n lab17
+  -n lab16
+kubectl get pod auto-defaults -n lab16
 # Running — no rejection this time
 
 # Inspect what Kubernetes injected
-kubectl get pod auto-defaults -n lab17 -o jsonpath='{.spec.containers[0].resources}' | jq .
+kubectl get pod auto-defaults -n lab16 -o jsonpath='{.spec.containers[0].resources}' | jq .
 # Shows: limits.cpu=500m, limits.memory=256Mi, requests.cpu=100m, requests.memory=128Mi
 # These came from the LimitRange, not from the pod spec.
 
-kubectl delete pod auto-defaults -n lab17
+kubectl delete pod auto-defaults -n lab16
 
 # ── Step 6: Check current quota usage ────────────────────────────────────────
-kubectl describe resourcequota team-quota -n lab17
+kubectl describe resourcequota team-quota -n lab16
 # Used column now shows 0 (pod was deleted). Watch how it changes in next steps.
 
 # ── Step 7: Deploy a workload that consumes quota ─────────────────────────────
-kubectl apply -n lab17 -f - <<YAML
+kubectl apply -n lab16 -f - <<YAML
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -153,29 +153,29 @@ spec:
             memory: 256Mi
 YAML
 
-kubectl get pods -n lab17 -w
+kubectl get pods -n lab16 -w
 # Press Ctrl+C once all 3 pods are Running
 
 # See the quota consumption update
-kubectl describe resourcequota team-quota -n lab17
+kubectl describe resourcequota team-quota -n lab16
 # Used: requests.cpu=600m (3 x 200m), requests.memory=384Mi (3 x 128Mi), pods=3/10
 
 # ── Step 8: Hit the pod count limit ───────────────────────────────────────────
 # Scale beyond the quota limit to observe the enforcement
-kubectl scale deployment web -n lab17 --replicas=12
-kubectl get pods -n lab17
+kubectl scale deployment web -n lab16 --replicas=12
+kubectl get pods -n lab16
 # Only 10 pods will exist (the quota hard limit)
 
-kubectl get replicaset -n lab17
-kubectl describe replicaset -n lab17 -l app=web | grep -A5 "Conditions\|Warning"
+kubectl get replicaset -n lab16
+kubectl describe replicaset -n lab16 -l app=web | grep -A5 "Conditions\|Warning"
 # Events will show: "exceeded quota: team-quota, requested: pods=1, used: pods=10, limited: pods=10"
 
 # Scale back down
-kubectl scale deployment web -n lab17 --replicas=3
+kubectl scale deployment web -n lab16 --replicas=3
 
 # ── Step 9: Attempt to exceed the memory limit ────────────────────────────────
 # Try to deploy a pod requesting more memory than the LimitRange maximum
-kubectl apply -n lab17 -f - <<YAML
+kubectl apply -n lab16 -f - <<YAML
 apiVersion: v1
 kind: Pod
 metadata:
@@ -196,17 +196,17 @@ YAML
 
 # ── Step 10: Observe quota with multiple object types ─────────────────────────
 # Create a few Secrets to approach the Secrets quota
-kubectl create secret generic secret-1 --from-literal=key=val1 -n lab17
-kubectl create secret generic secret-2 --from-literal=key=val2 -n lab17
-kubectl create secret generic secret-3 --from-literal=key=val3 -n lab17
+kubectl create secret generic secret-1 --from-literal=key=val1 -n lab16
+kubectl create secret generic secret-2 --from-literal=key=val2 -n lab16
+kubectl create secret generic secret-3 --from-literal=key=val3 -n lab16
 
-kubectl describe resourcequota team-quota -n lab17
+kubectl describe resourcequota team-quota -n lab16
 # secrets: 3/5
 
 # Try to exceed the quota
-kubectl create secret generic secret-4 --from-literal=key=val4 -n lab17
-kubectl create secret generic secret-5 --from-literal=key=val5 -n lab17
-kubectl create secret generic secret-6 --from-literal=key=val6 -n lab17
+kubectl create secret generic secret-4 --from-literal=key=val4 -n lab16
+kubectl create secret generic secret-5 --from-literal=key=val5 -n lab16
+kubectl create secret generic secret-6 --from-literal=key=val6 -n lab16
 # The last one will fail: "exceeded quota: team-quota, requested: secrets=1,
 # used: secrets=5, limited: secrets=5"
 
@@ -262,7 +262,7 @@ kubectl delete namespace team-alpha team-beta
 # With both: you get automatic defaults AND hard namespace caps
 
 # ── Step 13: Clean up ────────────────────────────────────────────────────────
-kubectl delete namespace lab17
+kubectl delete namespace lab16
 
 
 # ── Further Reading ───────────────────────────────────────────────────────────
