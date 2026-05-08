@@ -41,8 +41,7 @@
 #               Secret reuse across deployments, Ingress path routing,
 #               apply order dependencies, image loading into k3d
 
-# ── Step 1: Create namespace and navigate to the lab directory ────────────────────────────────────
-kubectl create namespace microservices
+# ── Step 1: Navigate to the lab directory ────────────────────────────────────
 cd labs/06-microservices
 
 # ── Step 2: Build and load the API images into k3d ───────────────────────────
@@ -57,11 +56,15 @@ k3d image import products-api:latest users-api:latest -c k8s-lab
 # This copies the images into the k3d nodes so imagePullPolicy: IfNotPresent
 # finds them locally without needing a registry.
 
-# ── Step 3: Apply manifests in order ─────────────────────────────────────────
+# ── Step 3: Create the namespace ─────────────────────────────────────────────
+kubectl apply -f k8s/namespace.yaml
+kubectl get namespace microservices
+# Expected: microservices   Active
+
+# ── Step 4: Apply remaining manifests in order ────────────────────────────────
 # Order matters: the API deployments reference the postgres-secret defined
 # in postgres.yaml. Applying the API manifests first would cause the pods to
 # be rejected because the Secret doesn't exist yet.
-kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/postgres.yaml
 
 # Wait for PostgreSQL to be ready before deploying the APIs.
@@ -73,7 +76,7 @@ kubectl apply -f k8s/products-api.yaml
 kubectl apply -f k8s/users-api.yaml
 kubectl apply -f k8s/ingress.yaml
 
-# ── Step 4: Verify all pods are running ───────────────────────────────────────
+# ── Step 5: Verify all pods are running ───────────────────────────────────────
 kubectl get pods -n microservices -w
 # Press Ctrl+C once all 5 pods show READY 1/1:
 #   1 x postgres
@@ -84,20 +87,20 @@ kubectl get pods -n microservices -w
 # Check logs: kubectl logs -n microservices -l app=products-api
 # Then retry: kubectl rollout restart deployment/products-api -n microservices
 
-# ── Step 5: Check services and ingress ────────────────────────────────────────
+# ── Step 6: Check services and ingress ────────────────────────────────────────
 kubectl get svc -n microservices
 # Expected: postgres-svc (:5432), products-svc (:80), users-svc (:80)
 
 kubectl get ingress -n microservices
 # Expected: microservices-ingress routing /products and /users
 
-# ── Step 6: Test the Products API ────────────────────────────────────────────
+# ── Step 7: Test the Products API ────────────────────────────────────────────
 # The API requires an x-api-key header. The key is "changeme" (set in the Secret).
 # Open port 8080 via the PORTS tab in VS Code, or test from the terminal:
 
-# List all products (5 are pre-seeded by the init SQL)
+# List all products (3 are pre-seeded by the init SQL)
 curl -s -H "x-api-key: changeme" http://localhost:8080/products | jq .
-# Expected: {"data":[...],"pagination":{"total":5,...}}
+# Expected: {"data":[...],"pagination":{"total":3,...}}
 
 # Get a single product by ID
 curl -s -H "x-api-key: changeme" http://localhost:8080/products/1 | jq .
@@ -108,7 +111,7 @@ curl -s -X POST \
   -H "Content-Type: application/json" \
   -d '{"name":"Monitor","price":299.99,"category":"Electronics","stock":10,"sku":"ELEC-MN-006"}' \
   http://localhost:8080/products | jq .
-# Expected: {"data":{..."id":6...}}
+# Expected: {"data":{..."id":4...}}
 
 # Update a product
 curl -s -X PUT \
@@ -117,14 +120,14 @@ curl -s -X PUT \
   -d '{"stock": 35}' \
   http://localhost:8080/products/1 | jq .
 
-# Delete the product you just created
+# Delete the product you just created (it was assigned id=4)
 curl -s -X DELETE \
   -H "x-api-key: changeme" \
-  http://localhost:8080/products/6
+  http://localhost:8080/products/4
 # Expected: HTTP 204 No Content (no response body)
 
-# ── Step 7: Test the Users API ────────────────────────────────────────────────
-# List all users (5 are pre-seeded)
+# ── Step 8: Test the Users API ────────────────────────────────────────────────
+# List all users (3 are pre-seeded)
 curl -s -H "x-api-key: changeme" http://localhost:8080/users | jq .
 
 # Get a single user
@@ -137,14 +140,14 @@ curl -s -X POST \
   -d '{"name":"Frank Muller","email":"frank@example.com","role":"customer"}' \
   http://localhost:8080/users | jq .
 
-# ── Step 8: Test health endpoints (no auth required) ──────────────────────────
+# ── Step 9: Test health endpoints (no auth required) ──────────────────────────
 curl -s http://localhost:8080/products/health | jq .
 # Expected: {"status":"ok","service":"products-api","version":"1.0.0",...}
 
 curl -s http://localhost:8080/users/health | jq .
 # Expected: {"status":"ok","service":"users-api","version":"1.0.0",...}
 
-# ── Step 9: Test authentication ───────────────────────────────────────────────
+# ── Step 10: Test authentication ───────────────────────────────────────────────
 # Missing API key → 401
 curl -s http://localhost:8080/products | jq .
 # Expected: {"error":"Unauthorized — invalid or missing x-api-key header"}
@@ -153,7 +156,7 @@ curl -s http://localhost:8080/products | jq .
 curl -s -H "x-api-key: wrongkey" http://localhost:8080/products | jq .
 # Expected: {"error":"Unauthorized — invalid or missing x-api-key header"}
 
-# ── Step 10: Explore the Swagger UI ──────────────────────────────────────────
+# ── Step 11: Explore the Swagger UI ──────────────────────────────────────────
 # Both APIs expose interactive documentation at /api-docs.
 # Port-forward each API directly (bypassing the Ingress) to browse the full UI:
 kubectl port-forward svc/products-svc 3001:80 -n microservices
@@ -164,7 +167,7 @@ kubectl port-forward svc/users-svc 3002:80 -n microservices
 # Open port 3002 in the PORTS tab → navigate to /api-docs
 # Press Ctrl+C when done
 
-# ── Step 11: Inspect service discovery ───────────────────────────────────────
+# ── Step 12: Inspect service discovery ───────────────────────────────────────
 # The APIs connect to postgres using the Service DNS name "postgres-svc:5432".
 # Kubernetes resolves this to the postgres pod's ClusterIP automatically.
 # Inspect the DATABASE_URL that was injected via the Secret:
@@ -177,7 +180,7 @@ echo ""
 # the same namespace. This is Kubernetes service discovery — pods find each
 # other by Service name, never by IP address.
 
-# ── Step 12: Connect to PostgreSQL directly ───────────────────────────────────
+# ── Step 13: Connect to PostgreSQL directly ───────────────────────────────────
 PG_POD=$(kubectl get pod -n microservices -l app=postgres \
   -o jsonpath='{.items[0].metadata.name}')
 
@@ -190,7 +193,7 @@ kubectl exec -it $PG_POD -n microservices -- \
 #   SELECT * FROM users;             -- view all users
 #   \q                               -- quit psql
 
-# ── Step 13: Verify both APIs write to the same database ─────────────────────
+# ── Step 14: Verify both APIs write to the same database ─────────────────────
 # Create a product via the API
 curl -s -X POST \
   -H "x-api-key: changeme" \
@@ -203,7 +206,7 @@ kubectl exec -it $PG_POD -n microservices -- \
   psql -U api_user -d shared_db -c "SELECT id, name FROM products ORDER BY id DESC LIMIT 3;"
 # The test item appears — created by the API, visible directly in postgres.
 
-# ── Step 14: Scale an API deployment ─────────────────────────────────────────
+# ── Step 15: Scale an API deployment ─────────────────────────────────────────
 # The APIs are stateless — they can be scaled freely. The shared database
 # handles concurrent connections from all replicas.
 kubectl scale deployment products-api -n microservices --replicas=4
@@ -213,7 +216,7 @@ kubectl get pods -n microservices -w
 # Scale back down
 kubectl scale deployment products-api -n microservices --replicas=2
 
-# ── Step 15: Rotate the API key ───────────────────────────────────────────────
+# ── Step 16: Rotate the API key ───────────────────────────────────────────────
 # Update the Secret and restart the pods to pick up the new value.
 # The --dry-run=client -o yaml | kubectl apply pattern is idempotent —
 # it works whether the Secret already exists or not.
@@ -247,7 +250,7 @@ kubectl create secret generic users-api-secret \
 
 kubectl rollout restart deployment/products-api deployment/users-api -n microservices
 
-# ── Step 16: Clean up ────────────────────────────────────────────────────────
+# ── Step 17: Clean up ────────────────────────────────────────────────────────
 kubectl delete namespace microservices
 # This deletes all resources including the PVC and its data.
 
