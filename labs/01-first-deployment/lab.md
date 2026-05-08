@@ -88,7 +88,7 @@ kubectl port-forward svc/nginx 8081:80 -n lab01
 
 # ── Step 8: Scale the deployment ─────────────────────────────────────────────
 kubectl scale deployment nginx -n lab01 --replicas=4
-kubectl get pods -n lab01
+kubectl get pods -n lab01 -o wide
 # Notice the scheduler spreads the new pods across both agent nodes
 
 # ── Step 9: Clean up ─────────────────────────────────────────────────────────
