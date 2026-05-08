@@ -41,9 +41,7 @@
 #               Secret reuse across deployments, Ingress path routing,
 #               apply order dependencies, image loading into k3d
 
-# ── Step 1: Create namespace and Navigate to the lab directory ────────────────────────────────────
-kubectl create namespace microservices
-
+# ── Step 1: Navigate to the lab directory ────────────────────────────────────
 cd labs/06-microservices
 
 # ── Step 2: Build and load the API images into k3d ───────────────────────────
