@@ -1,260 +1,339 @@
-# Lab 06: Microservices — Two APIs Sharing a PostgreSQL Database
-# ─────────────────────────────────────────────────────────────────────────────
-# This lab deploys a realistic multi-service application: two Node.js/Express
-# REST APIs (Products and Users) that share a single PostgreSQL database.
-# The images are built locally and loaded into k3d so no registry is needed.
-#
-# HOW TO USE THIS LAB:
-#   Copy and paste each command block into your terminal one step at a time.
-#   Do not run this file as a script.
-#   Run all commands from the labs/06-microservices/ directory.
-#
-# What you will build:
-#
-#   Browser / curl
-#        │
-#        │ :8080 (Codespace port → k3d LoadBalancer → Traefik Ingress)
-#        ▼
-#   ┌──────────────────────────────────────────────────────────────────┐
-#   │  Namespace: microservices                                        │
-#   │                                                                  │
-#   │  Ingress                                                         │
-#   │    /products ──────────────────────────────────────────────┐    │
-#   │    /users ─────────────────────────────────────────────┐   │    │
-#   │                                                        │   │    │
-#   │  ┌─────────────────────┐   ┌─────────────────────┐    │   │    │
-#   │  │ Deployment:         │   │ Deployment:         │    │   │    │
-#   │  │ users-api (x2)  ◄──┘   │ products-api (x2) ◄─┘        │    │
-#   │  │ port 3002           │   │ port 3001           │         │    │
-#   │  └──────────┬──────────┘   └──────────┬──────────┘         │    │
-#   │             └──────────────┬───────────┘                    │    │
-#   │                            │ shared DATABASE_URL             │    │
-#   │                            ▼                                 │    │
-#   │         ┌──────────────────────────────────┐                 │    │
-#   │         │ Deployment: postgres              │                 │    │
-#   │         │ port 5432                         │                 │    │
-#   │         │ PVC: postgres-pvc (1Gi)           │                 │    │
-#   │         └──────────────────────────────────┘                 │    │
-#   └──────────────────────────────────────────────────────────────┘
-#
-# Key concepts: multi-service app, shared database, service discovery,
-#               Secret reuse across deployments, Ingress path routing,
-#               apply order dependencies, image loading into k3d
+# Lab 06: Microservices with Postgres
 
-# ── Step 1: Navigate to the lab directory ────────────────────────────────────
+Two Node.js/Express REST APIs sharing a single PostgreSQL database, deployable
+via Docker Compose or Kubernetes.
+
+## What You Will Build
+
+```
+  Browser / curl
+       │
+       │ :8080 (Codespace → k3d LoadBalancer)  OR  :3001/:3002 (Docker Compose)
+       ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │  Traefik Ingress  (K8s only)                                │
+  │  /products  ──────────────────────────────────────────────┐ │
+  │  /users     ───────────────────────────────────────────┐  │ │
+  └────────────────────────────────────────────────────────────┘ │
+       │  Namespace: microservices                         │  │
+       │                                                   │  │
+  ┌────▼──────────────────────┐     ┌─────────────────────▼──┐
+  │  Service: products-svc    │     │  Service: users-svc     │
+  │  (ClusterIP :80)          │     │  (ClusterIP :80)        │
+  └────────────┬──────────────┘     └──────────┬─────────────┘
+               │                               │
+  ┌────────────▼──────────────┐     ┌──────────▼─────────────┐
+  │  Deployment: products-api │     │  Deployment: users-api  │
+  │  2 replicas  port 3001    │     │  2 replicas  port 3002  │
+  │  Node.js / Express        │     │  Node.js / Express      │
+  │  GET/POST/PUT/DELETE      │     │  GET/POST/PUT/DELETE    │
+  │  /products                │     │  /users                 │
+  └────────────┬──────────────┘     └──────────┬─────────────┘
+               │                               │
+               └───────────────┬───────────────┘
+                               │ DATABASE_URL (shared)
+                               ▼
+              ┌────────────────────────────────────┐
+              │  Deployment: postgres               │
+              │  Service: postgres-svc :5432        │
+              │                                    │
+              │  ┌─────────────┐ ┌──────────────┐  │
+              │  │  products   │ │    users     │  │
+              │  │   table     │ │    table     │  │
+              │  └─────────────┘ └──────────────┘  │
+              │                                    │
+              │  PersistentVolumeClaim (1Gi)        │
+              └────────────────────────────────────┘
+```
+
+Both APIs are protected by an API key (`x-api-key` header). Auth is handled
+in middleware — not in the database layer — so both services share the DB
+without sharing credentials logic.
+
+## Quick Start — Docker Compose
+
+```bash
 cd labs/06-microservices
 
-# ── Step 2: Build and load the API images into k3d ───────────────────────────
-# k3d runs Kubernetes inside Docker. Images built locally are not automatically
-# available inside the cluster — they must be explicitly imported.
+# Start everything (postgres + both APIs)
+docker compose up --build
+
+# Verify
+curl http://localhost:3001/health
+curl http://localhost:3002/health
+
+# Call the APIs (API key required)
+curl -H "x-api-key: changeme" http://localhost:3001/products
+curl -H "x-api-key: changeme" http://localhost:3002/users
+```
+
+Swagger docs:
+- Products: http://localhost:3001/api-docs
+- Users:    http://localhost:3002/api-docs
+
+## Quick Start — Kubernetes (k3d)
+
+### 1. Build images and import into the k3d cluster
+
+```bash
+cd labs/06-microservices
+
 docker build -t products-api:latest ./products-api
-docker build -t users-api:latest ./users-api
+docker build -t users-api:latest    ./users-api
 
 k3d image import products-api:latest users-api:latest -c k8s-lab
-# Expected: INFO[...] Successfully imported images into 1 cluster(s)
-#
-# This copies the images into the k3d nodes so imagePullPolicy: IfNotPresent
-# finds them locally without needing a registry.
+```
 
-# ── Step 3: Apply manifests in order ─────────────────────────────────────────
-# Order matters: the API deployments reference the postgres-secret defined
-# in postgres.yaml. Applying the API manifests first would cause the pods to
-# be rejected because the Secret doesn't exist yet.
+### 2. Apply manifests
+
+Apply the files **one at a time in this order** — the API deployments reference a
+Secret defined in `postgres.yaml`, so that must exist before the APIs are created.
+Using `kubectl apply -f k8s/` applies all files at once with no guaranteed order
+and will cause the API pods to fail with `CreateContainerConfigError`.
+
+```bash
 kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/postgres.yaml
-
-# Wait for PostgreSQL to be ready before deploying the APIs.
-# The APIs will crash on startup if the database is not yet accepting connections.
-kubectl rollout status deployment/postgres -n microservices
-# Expected: deployment "postgres" successfully rolled out
-
 kubectl apply -f k8s/products-api.yaml
 kubectl apply -f k8s/users-api.yaml
 kubectl apply -f k8s/ingress.yaml
+```
 
-# ── Step 4: Verify all pods are running ───────────────────────────────────────
+### 3. Wait for pods to be ready
+
+```bash
 kubectl get pods -n microservices -w
-# Press Ctrl+C once all 5 pods show READY 1/1:
-#   1 x postgres
-#   2 x products-api
-#   2 x users-api
-#
-# If any API pod shows CrashLoopBackOff, postgres may still be initialising.
-# Check logs: kubectl logs -n microservices -l app=products-api
-# Then retry: kubectl rollout restart deployment/products-api -n microservices
+# Press Ctrl+C once all pods show Running
+```
 
-# ── Step 5: Check services and ingress ────────────────────────────────────────
-kubectl get svc -n microservices
-# Expected: postgres-svc (:5432), products-svc (:80), users-svc (:80)
+### 4. Test via Ingress on port 8080
 
-kubectl get ingress -n microservices
-# Expected: microservices-ingress routing /products and /users
+```bash
+curl -H "x-api-key: changeme" http://localhost:8080/products
+curl -H "x-api-key: changeme" http://localhost:8080/users
+```
 
-# ── Step 6: Test the Products API ────────────────────────────────────────────
-# The API requires an x-api-key header. The key is "changeme" (set in the Secret).
-# Open port 8080 via the PORTS tab in VS Code, or test from the terminal:
-
-# List all products (5 are pre-seeded by the init SQL)
-curl -s -H "x-api-key: changeme" http://localhost:8080/products | jq .
-# Expected: {"data":[...],"pagination":{"total":5,...}}
-
-# Get a single product by ID
-curl -s -H "x-api-key: changeme" http://localhost:8080/products/1 | jq .
-
-# Create a new product
-curl -s -X POST \
-  -H "x-api-key: changeme" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Monitor","price":299.99,"category":"Electronics","stock":10,"sku":"ELEC-MN-006"}' \
-  http://localhost:8080/products | jq .
-# Expected: {"data":{..."id":6...}}
-
-# Update a product
-curl -s -X PUT \
-  -H "x-api-key: changeme" \
-  -H "Content-Type: application/json" \
-  -d '{"stock": 35}' \
-  http://localhost:8080/products/1 | jq .
-
-# Delete the product you just created
-curl -s -X DELETE \
-  -H "x-api-key: changeme" \
-  http://localhost:8080/products/6
-# Expected: HTTP 204 No Content (no response body)
-
-# ── Step 7: Test the Users API ────────────────────────────────────────────────
-# List all users (5 are pre-seeded)
-curl -s -H "x-api-key: changeme" http://localhost:8080/users | jq .
-
-# Get a single user
-curl -s -H "x-api-key: changeme" http://localhost:8080/users/1 | jq .
-
-# Create a new user
-curl -s -X POST \
-  -H "x-api-key: changeme" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Frank Muller","email":"frank@example.com","role":"customer"}' \
-  http://localhost:8080/users | jq .
-
-# ── Step 8: Test health endpoints (no auth required) ──────────────────────────
-curl -s http://localhost:8080/products/health | jq .
-# Expected: {"status":"ok","service":"products-api","version":"1.0.0",...}
-
-curl -s http://localhost:8080/users/health | jq .
-# Expected: {"status":"ok","service":"users-api","version":"1.0.0",...}
-
-# ── Step 9: Test authentication ───────────────────────────────────────────────
-# Missing API key → 401
-curl -s http://localhost:8080/products | jq .
-# Expected: {"error":"Unauthorized — invalid or missing x-api-key header"}
-
-# Wrong API key → 401
-curl -s -H "x-api-key: wrongkey" http://localhost:8080/products | jq .
-# Expected: {"error":"Unauthorized — invalid or missing x-api-key header"}
-
-# ── Step 10: Explore the Swagger UI ──────────────────────────────────────────
-# Both APIs expose interactive documentation at /api-docs.
-# Port-forward each API directly (bypassing the Ingress) to browse the full UI:
+Or port-forward individual services:
+```bash
 kubectl port-forward svc/products-svc 3001:80 -n microservices
-# Open port 3001 in the PORTS tab → navigate to /api-docs
-# Press Ctrl+C when done
+kubectl port-forward svc/users-svc    3002:80 -n microservices
+```
 
-kubectl port-forward svc/users-svc 3002:80 -n microservices
-# Open port 3002 in the PORTS tab → navigate to /api-docs
-# Press Ctrl+C when done
+## API Endpoints
 
-# ── Step 11: Inspect service discovery ───────────────────────────────────────
-# The APIs connect to postgres using the Service DNS name "postgres-svc:5432".
-# Kubernetes resolves this to the postgres pod's ClusterIP automatically.
-# Inspect the DATABASE_URL that was injected via the Secret:
-kubectl get secret postgres-secret -n microservices \
-  -o jsonpath='{.data.DATABASE_URL}' | base64 --decode
-echo ""
-# Expected: postgresql://api_user:api_pass@postgres-svc:5432/shared_db
-#
-# The hostname "postgres-svc" works because a Service of that name exists in
-# the same namespace. This is Kubernetes service discovery — pods find each
-# other by Service name, never by IP address.
+### Products API (port 3001)
 
-# ── Step 12: Connect to PostgreSQL directly ───────────────────────────────────
-PG_POD=$(kubectl get pod -n microservices -l app=postgres \
-  -o jsonpath='{.items[0].metadata.name}')
+| Method | Path          | Auth | Description           |
+|--------|---------------|------|-----------------------|
+| GET    | /health       | No   | Health check          |
+| GET    | /api-docs     | No   | Swagger UI            |
+| GET    | /products     | Yes  | List products (paged) |
+| POST   | /products     | Yes  | Create product        |
+| GET    | /products/:id | Yes  | Get product by ID     |
+| PUT    | /products/:id | Yes  | Update product        |
+| DELETE | /products/:id | Yes  | Delete product        |
 
-kubectl exec -it $PG_POD -n microservices -- \
-  psql -U api_user -d shared_db
+### Users API (port 3002)
 
-# Once inside psql:
-#   \dt                              -- list tables (products, users)
-#   SELECT * FROM products;          -- view all products
-#   SELECT * FROM users;             -- view all users
-#   \q                               -- quit psql
+| Method | Path       | Auth | Description        |
+|--------|------------|------|--------------------|
+| GET    | /health    | No   | Health check       |
+| GET    | /api-docs  | No   | Swagger UI         |
+| GET    | /users     | Yes  | List users (paged) |
+| POST   | /users     | Yes  | Create user        |
+| GET    | /users/:id | Yes  | Get user by ID     |
+| PUT    | /users/:id | Yes  | Update user        |
+| DELETE | /users/:id | Yes  | Delete user        |
 
-# ── Step 13: Verify both APIs write to the same database ─────────────────────
-# Create a product via the API
-curl -s -X POST \
-  -H "x-api-key: changeme" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Test Item","price":9.99,"sku":"TEST-001"}' \
-  http://localhost:8080/products | jq .id
+## Authentication
 
-# Confirm it landed in the shared database
-kubectl exec -it $PG_POD -n microservices -- \
-  psql -U api_user -d shared_db -c "SELECT id, name FROM products ORDER BY id DESC LIMIT 3;"
-# The test item appears — created by the API, visible directly in postgres.
+Both APIs use an `x-api-key` header. Default key is `changeme`.
 
-# ── Step 14: Scale an API deployment ─────────────────────────────────────────
-# The APIs are stateless — they can be scaled freely. The shared database
-# handles concurrent connections from all replicas.
-kubectl scale deployment products-api -n microservices --replicas=4
-kubectl get pods -n microservices -w
-# Press Ctrl+C once all 4 products-api pods are Running
+```bash
+curl -H "x-api-key: changeme" http://localhost:3001/products
+```
 
-# Scale back down
-kubectl scale deployment products-api -n microservices --replicas=2
+Set `AUTH_MODE=none` in environment to disable auth (dev only).
 
-# ── Step 15: Rotate the API key ───────────────────────────────────────────────
-# Update the Secret and restart the pods to pick up the new value.
-# The --dry-run=client -o yaml | kubectl apply pattern is idempotent —
-# it works whether the Secret already exists or not.
-kubectl create secret generic products-api-secret \
-  --from-literal=API_KEY=mynewkey \
-  -n microservices \
-  --dry-run=client -o yaml | kubectl apply -f -
+## Pagination
 
-kubectl create secret generic users-api-secret \
-  --from-literal=API_KEY=mynewkey \
-  -n microservices \
-  --dry-run=client -o yaml | kubectl apply -f -
+All list endpoints support `?page=1&limit=10`:
 
-kubectl rollout restart deployment/products-api deployment/users-api -n microservices
+```json
+{
+  "data": [...],
+  "pagination": {
+    "total": 8, "page": 1, "limit": 10,
+    "totalPages": 1, "hasNext": false, "hasPrev": false
+  }
+}
+```
+
+## Environment Variables
+
+| Variable               | Default                                                   | Description             |
+|------------------------|-----------------------------------------------------------|-------------------------|
+| `PORT`                 | 3001 / 3002                                               | API listen port         |
+| `AUTH_MODE`            | `apikey`                                                  | `apikey` or `none`      |
+| `API_KEY`              | `changeme`                                                | API key value           |
+| `DATABASE_URL`         | `postgresql://api_user:api_pass@localhost:5432/shared_db` | Postgres connection URL |
+| `RATE_LIMIT_WINDOW_MS` | `60000`                                                   | Rate limit window (ms)  |
+| `RATE_LIMIT_MAX`       | `100`                                                     | Max requests per window |
+
+## Project Structure
+
+```
+06-microservices/
+├── docker-compose.yml
+├── init-db/
+│   └── 01-init.sql         ← creates tables + seeds data on first start
+├── k8s/
+│   ├── namespace.yaml
+│   ├── postgres.yaml        ← Deployment, Service, PVC, ConfigMap
+│   ├── products-api.yaml    ← Deployment, Service, Secret (2 replicas)
+│   ├── users-api.yaml       ← Deployment, Service, Secret (2 replicas)
+│   └── ingress.yaml         ← Traefik routes /products and /users
+├── products-api/
+│   ├── Dockerfile
+│   ├── openapi.yaml
+│   └── src/
+│       ├── app.js
+│       ├── index.js
+│       ├── routes/          ← health, products
+│       ├── controllers/     ← products
+│       ├── middleware/      ← auth, pagination
+│       ├── db/              ← client.js, schema.sql
+│       └── data/            ← seed.js
+└── users-api/
+    ├── Dockerfile
+    ├── openapi.yaml
+    └── src/
+        ├── app.js
+        ├── index.js
+        ├── routes/          ← health, users
+        ├── controllers/     ← users
+        ├── middleware/      ← auth, pagination
+        ├── db/              ← client.js, schema.sql
+        └── data/            ← seed.js
+```
+## Changing the API Key or Auth Mode
+
+Both APIs read their auth configuration from environment variables. How you
+update them depends on whether you are running Docker Compose or Kubernetes.
+
+### Docker Compose
+
+The `.env.example` files in each API folder show the available variables.
+The simplest approach is to pass overrides directly in `docker-compose.yml`
+or via a `.env` file in the `06-microservices/` folder.
+
+**Change the API key:**
+
+Edit the `API_KEY` value in `docker-compose.yml` for both services:
+```yaml
+environment:
+  API_KEY: mynewkey
+```
+
+Then restart the stack to pick up the change:
+```bash
+docker compose down
+docker compose up
+```
+
+Test with the new key:
+```bash
+curl -H "x-api-key: mynewkey" http://localhost:3001/products
+curl -H "x-api-key: mynewkey" http://localhost:3002/users
+```
+
+**Disable auth entirely (dev/testing only):**
+
+Set `AUTH_MODE=none` in `docker-compose.yml` for both services:
+```yaml
+environment:
+  AUTH_MODE: none
+```
+
+Restart the stack, then calls work without any header:
+```bash
+docker compose down && docker compose up
+curl http://localhost:3001/products
+curl http://localhost:3002/users
+```
+
+---
+
+### Kubernetes
+
+In Kubernetes the API key lives in Secrets (`products-api-secret` and
+`users-api-secret`). You update the Secret and then restart the pods to
+pick up the new value.
+
+**Change the API key:**
+
+```bash
+# Update both secrets with the new key
+kubectl create secret generic products-api-secret   --from-literal=API_KEY=mynewkey   --namespace microservices   --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl create secret generic users-api-secret   --from-literal=API_KEY=mynewkey   --namespace microservices   --dry-run=client -o yaml | kubectl apply -f -
+
+# Restart both deployments to pick up the new secret value
+kubectl rollout restart deployment/products-api -n microservices
+kubectl rollout restart deployment/users-api -n microservices
+
 kubectl rollout status deployment/products-api -n microservices
+kubectl rollout status deployment/users-api -n microservices
 
 # Test with the new key
-curl -s -H "x-api-key: mynewkey" http://localhost:8080/products | jq .data[0].name
-# Expected: "Wireless Headphones"
+curl -H "x-api-key: mynewkey" http://localhost:8080/products
+curl -H "x-api-key: mynewkey" http://localhost:8080/users
+```
 
-# Restore the original key
-kubectl create secret generic products-api-secret \
-  --from-literal=API_KEY=changeme \
-  -n microservices \
-  --dry-run=client -o yaml | kubectl apply -f -
+**Disable auth entirely (dev/testing only):**
 
-kubectl create secret generic users-api-secret \
-  --from-literal=API_KEY=changeme \
-  -n microservices \
-  --dry-run=client -o yaml | kubectl apply -f -
+`AUTH_MODE` is set as a plain environment variable in the Deployment manifests,
+not in a Secret. Patch both Deployments directly:
 
-kubectl rollout restart deployment/products-api deployment/users-api -n microservices
+```bash
+kubectl set env deployment/products-api AUTH_MODE=none -n microservices
+kubectl set env deployment/users-api    AUTH_MODE=none -n microservices
 
-# ── Step 16: Clean up ────────────────────────────────────────────────────────
+# Kubernetes automatically rolls out the change — watch it happen:
+kubectl rollout status deployment/products-api -n microservices
+
+# Calls now work without any header
+curl http://localhost:8080/products
+curl http://localhost:8080/users
+```
+
+**Restore auth:**
+
+```bash
+kubectl set env deployment/products-api AUTH_MODE=apikey -n microservices
+kubectl set env deployment/users-api    AUTH_MODE=apikey -n microservices
+```
+
+## Cleanup
+
+**Docker Compose:**
+```bash
+docker compose down -v
+```
+The `-v` flag removes the postgres volume so the database is fully reset on next `up`.
+
+**Kubernetes:**
+```bash
 kubectl delete namespace microservices
-# This deletes all resources including the PVC and its data.
+```
+This removes all resources in the namespace — Deployments, Services, Secrets, the PersistentVolumeClaim, and the Postgres data volume.
 
 
-# ── Further Reading ───────────────────────────────────────────────────────────
-# Services and DNS:
-#   https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/
-# Connecting applications with Services:
-#   https://kubernetes.io/docs/tutorials/services/connect-applications-service/
-# ConfigMaps and Secrets as environment variables:
-#   https://kubernetes.io/docs/tasks/inject-data-application/distribute-credentials-secure/
+## Further Reading
+
+- [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
+- [Services](https://kubernetes.io/docs/concepts/services-networking/service/)
+- [Secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
+- [PersistentVolumeClaims](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
+- [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/)
+- [Docker Compose documentation](https://docs.docker.com/compose/)
