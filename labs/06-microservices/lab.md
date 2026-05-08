@@ -73,9 +73,11 @@ Swagger docs:
 
 ## Quick Start — Kubernetes (k3d)
 
-### 1. Build images and import into the k3d cluster
+### 1. Create namespace, build images and import into the k3d cluster
 
 ```bash
+kubectl create namespace microservices
+
 cd labs/06-microservices
 
 docker build -t products-api:latest ./products-api
