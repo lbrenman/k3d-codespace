@@ -66,7 +66,7 @@ spec:
 YAML
 
 # ── Step 4: Watch pods come up ────────────────────────────────────────────────
-kubectl get pods -n lab01 -w
+kubectl get pods -n lab01 -o wide
 # Press Ctrl+C once both pods show STATUS=Running
 
 # Notice pods are spread across agent-0 and agent-1 — the scheduler
