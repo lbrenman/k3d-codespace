@@ -292,14 +292,9 @@ YAML
 # variables injected via the Secret. Do NOT change these values — just scroll
 # past the database section.
 #
-# Fill in the "Administrator Account Settings" section:
-#   Site title:        My Gitea
-#   Admin username:    gitadmin
-#   Admin password:    (choose one, at least 8 characters)
-#   Admin email:       admin@example.com
-#
-# Click "Install Gitea". After install you will land on the Gitea dashboard —
-# a fully working private Git server running in your Kubernetes cluster.
+# Click "Install Gitea". After install you will land on the register page
+# Enter a Username, Email address and Password and click Register Account and you will land on the 
+# Gitea dashboard — a fully working private Git server running in your Kubernetes cluster.
 
 # ── Step 8: Create a repository to test persistence ───────────────────────────
 # In the Gitea UI:
