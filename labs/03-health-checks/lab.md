@@ -309,6 +309,19 @@ kubectl get pods -n lab03 -w
 
 # Inspect the probe config on a running pod
 kubectl describe pod -n lab03 -l app=production-pattern | grep -A8 "Startup\|Liveness\|Readiness"
+# Expected output (repeated once per pod replica):
+#   Liveness:   http-get http://:80/ delay=10s timeout=1s period=10s #success=1 #failure=3
+#   Readiness:  http-get http://:80/ delay=3s  timeout=1s period=5s  #success=1 #failure=2
+#   Startup:    http-get http://:80/ delay=2s  timeout=1s period=3s  #success=1 #failure=10
+#
+# Reading the probe summary:
+#   delay=Xs    — initialDelaySeconds: how long to wait after the container starts
+#   period=Xs   — periodSeconds: how often the check runs
+#   #failure=N  — failureThreshold: how many consecutive failures before action is taken
+#   timeout=1s  — how long kubectl waits for a response before counting it as a failure
+#
+# Notice Startup has #failure=10 with period=3s — that allows up to 30s for startup.
+# Liveness has delay=10s so it doesn't even start until after Startup has passed.
 
 # ── Step 15: Clean up ────────────────────────────────────────────────────────
 kubectl delete namespace lab03
