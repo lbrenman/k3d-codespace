@@ -66,7 +66,7 @@ spec:
 YAML
 
 # ── Step 4: Watch pods come up ────────────────────────────────────────────────
-kubectl get pods -n lab01 -o wide
+kubectl get pods -n lab01 -o wide -w
 # Press Ctrl+C once both pods show STATUS=Running
 
 # Notice pods are spread across agent-0 and agent-1 — the scheduler
@@ -92,6 +92,7 @@ kubectl get pods -n lab01 -o wide
 # Notice the scheduler spreads the new pods across both agent nodes
 
 # ── Step 9: Clean up ─────────────────────────────────────────────────────────
+# Close the other terminal
 kubectl delete namespace lab01
 
 
