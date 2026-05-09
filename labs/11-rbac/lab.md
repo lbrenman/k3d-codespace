@@ -1,5 +1,6 @@
 # Lab 11: RBAC — Roles, ServiceAccounts & Permissions
 # ─────────────────────────────────────────────────────────────────────────────
+#
 # RBAC (Role-Based Access Control) is how Kubernetes controls who (or what)
 # can do what to which resources. By default, pods have almost no permissions.
 # RBAC lets you grant fine-grained access — for example, allowing a pod to
