@@ -1,5 +1,6 @@
 # Lab 06: Microservices — Two APIs Sharing a PostgreSQL Database
 # ─────────────────────────────────────────────────────────────────────────────
+#
 # This lab deploys a realistic multi-service application: two Node.js/Express
 # REST APIs (Products and Users) that share a single PostgreSQL database.
 # The images are built locally and loaded into k3d so no registry is needed.
