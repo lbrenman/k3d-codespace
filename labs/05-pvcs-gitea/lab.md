@@ -1,5 +1,6 @@
 # Lab 05: PersistentVolumeClaims — Deploying Gitea + PostgreSQL
 # ─────────────────────────────────────────────────────────────────────────────
+#
 # Gitea is a lightweight self-hosted Git service — like a private GitHub.
 # This lab deploys Gitea backed by PostgreSQL, teaching PersistentVolumeClaims
 # (PVCs) in a practical context. PVCs are how Kubernetes reserves durable
