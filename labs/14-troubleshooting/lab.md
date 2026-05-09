@@ -1,6 +1,5 @@
 # Lab 14: Troubleshooting — Diagnosing Common Pod Failures
 # ─────────────────────────────────────────────────────────────────────────────
-#
 # Every Kubernetes practitioner encounters failing pods. This lab deliberately
 # creates the most common failure modes so you can learn to recognise and fix
 # them. Each section introduces a broken pod, shows you how to diagnose it,
@@ -65,10 +64,9 @@ spec:
 YAML
 
 # ── Step 3: Diagnose CrashLoopBackOff ────────────────────────────────────────
-kubectl get pod crash-loop -n lab14 -w
+kubectl get pod crash-loop -n lab14
 # STATUS shows CrashLoopBackOff, RESTARTS keeps incrementing
 
-# Press Ctrl+C
 # First — check the exit code and last state
 # This tells you WHY it crashed (exit code 1 = general error)
 kubectl describe pod crash-loop -n lab14
@@ -388,7 +386,10 @@ kubectl describe svc wrong-port-svc -n lab14
 # Look at: TargetPort — it shows 9999 but nginx listens on 80
 
 # Check what port the container actually exposes
-kubectl describe pod -n lab14 -l app=wrong-port | grep -A3 "Ports:"
+kubectl get pods -n lab14 -l app=wrong-port
+# Copy the pod name from above, then:
+kubectl describe pod -n lab14 -l app=wrong-port
+# Look for the "Ports:" line under the container section — it shows 80/TCP
 
 # ── Step 19: Fix the service targetPort ──────────────────────────────────────
 kubectl patch svc wrong-port-svc -n lab14 \
@@ -424,7 +425,7 @@ kubectl get events -n lab14 --sort-by='.lastTimestamp'
 
 # ── Step 21: Clean up ────────────────────────────────────────────────────────
 kubectl delete namespace lab14
-#
+
 # ── Further Reading ───────────────────────────────────────────────────────────
 # Pod lifecycle:
 #   https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/
