@@ -149,7 +149,7 @@ helm upgrade monitoring \
   --set prometheus.prometheusSpec.retention=12h \
   --set grafana.replicas=2
 
-# Watch the upgrade roll out
+# Watch the upgrade roll out in a second terminal
 kubectl get pods -n monitoring -w
 # Press Ctrl+C once pods are Running
 
