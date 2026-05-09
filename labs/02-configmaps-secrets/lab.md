@@ -1,13 +1,13 @@
 # Lab 02: ConfigMaps, Secrets & Environment Variables
 # ─────────────────────────────────────────────────────────────────────────────
 #
-# HOW TO USE THIS LAB:
-#   Copy and paste each command block into your terminal one step at a time.
-#   Do not run this file as a script.
-#
 # Learn how Kubernetes separates configuration from container images using
 # ConfigMaps (non-sensitive config) and Secrets (sensitive data).
 # This is a core 12-factor app principle — config lives outside the image.
+#
+# HOW TO USE THIS LAB:
+#   Copy and paste each command block into your terminal one step at a time.
+#   Do not run this file as a script.
 #
 # What you will build:
 #

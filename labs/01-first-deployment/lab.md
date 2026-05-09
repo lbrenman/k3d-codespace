@@ -1,13 +1,13 @@
 # Lab 01: Deploy Your First App
 # ─────────────────────────────────────────────────────────────────────────────
 #
-# HOW TO USE THIS LAB:
-#   Copy and paste each command block into your terminal one step at a time.
-#   Do not run this file as a script.
-#
 # In this lab you will deploy a simple nginx web server, expose it as a
 # ClusterIP Service, and access it via port-forward. You will also scale
 # the deployment and observe how pods are distributed across agent nodes.
+#
+# HOW TO USE THIS LAB:
+#   Copy and paste each command block into your terminal one step at a time.
+#   Do not run this file as a script.
 #
 # What you will build:
 #

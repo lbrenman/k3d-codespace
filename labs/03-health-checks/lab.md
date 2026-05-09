@@ -1,5 +1,6 @@
 # Lab 03: Health Checks & Self-Healing — Probes
 # ─────────────────────────────────────────────────────────────────────────────
+#
 # Kubernetes uses three types of probes to monitor container health and decide
 # when to restart a pod, stop sending it traffic, or delay starting it.
 # You may have noticed these in the Microservices lab's products-api and

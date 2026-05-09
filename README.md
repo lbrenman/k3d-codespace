@@ -100,6 +100,12 @@ kubectl get pods -A
 k9s
 ```
 
+Note that you may need to start the cluster if `kubectl get nodes` returns an error as follows:
+
+```bash
+bash .devcontainer/scripts/start-cluster.sh
+```
+
 ## Helpful Aliases
 
 | Alias | Command |
