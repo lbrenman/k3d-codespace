@@ -180,6 +180,7 @@ kubectl annotate deployment web-app \
 
 kubectl rollout status deployment/web-app -n lab08
 # It will hang — new pods can't start (ImagePullBackOff)
+# Press Ctrl+C
 
 kubectl get pods -n lab08
 # New pods show ErrImagePull or ImagePullBackOff
@@ -206,7 +207,7 @@ kubectl get pods -n lab08 -w
 # Bad pods replaced with good v2 pods
 # Press Ctrl+C
 
-# Check the traffic terminal — back to "Version 2 — v2.0.0"
+# Check the traffic terminal — still "Version 2 — v2.0.0"
 
 # ── Step 9: Roll back all the way to v1 ───────────────────────────────────────
 kubectl rollout undo deployment/web-app -n lab08 --to-revision=1
