@@ -1,5 +1,6 @@
 # Lab 14: Troubleshooting — Diagnosing Common Pod Failures
 # ─────────────────────────────────────────────────────────────────────────────
+#
 # Every Kubernetes practitioner encounters failing pods. This lab deliberately
 # creates the most common failure modes so you can learn to recognise and fix
 # them. Each section introduces a broken pod, shows you how to diagnose it,
@@ -422,7 +423,7 @@ kubectl get events -n lab14 --sort-by='.lastTimestamp'
 
 # ── Step 21: Clean up ────────────────────────────────────────────────────────
 kubectl delete namespace lab14
-
+#
 # ── Further Reading ───────────────────────────────────────────────────────────
 # Pod lifecycle:
 #   https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/

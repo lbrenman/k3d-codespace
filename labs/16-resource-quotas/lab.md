@@ -1,5 +1,6 @@
 # Lab 16: Resource Quotas & LimitRange — Namespace Governance
 # ─────────────────────────────────────────────────────────────────────────────
+#
 # Lab 07 covered per-pod resource requests and limits. But in a shared cluster
 # used by multiple teams, you also need to cap total namespace consumption.
 # Without guardrails:

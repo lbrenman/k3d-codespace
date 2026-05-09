@@ -1,5 +1,6 @@
 # Lab 07: Resource Limits & Autoscaling (HPA)
 # ─────────────────────────────────────────────────────────────────────────────
+#
 # Kubernetes can automatically scale your application up and down based on
 # real-time CPU or memory usage using the Horizontal Pod Autoscaler (HPA).
 # But before HPA can work, pods must declare their resource requests and limits

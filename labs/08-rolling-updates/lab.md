@@ -1,5 +1,6 @@
 # Lab 08: Rolling Updates & Zero-Downtime Deploys
 # ─────────────────────────────────────────────────────────────────────────────
+#
 # In production you need to update your application without dropping a single
 # request. Kubernetes handles this with rolling updates — gradually replacing
 # old pods with new ones while keeping the service continuously available.

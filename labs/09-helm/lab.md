@@ -1,5 +1,6 @@
 # Lab 09: Helm Charts — Prometheus & Grafana
 # ─────────────────────────────────────────────────────────────────────────────
+#
 # Helm is the package manager for Kubernetes. Instead of writing and managing
 # individual YAML manifests, Helm bundles them into a "chart" — a versioned,
 # configurable package you can install, upgrade, and rollback with a single

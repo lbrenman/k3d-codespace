@@ -1,5 +1,6 @@
 # Lab 12: k9s — Terminal UI for Kubernetes
 # ─────────────────────────────────────────────────────────────────────────────
+#
 # k9s is a terminal-based UI that sits on top of kubectl and makes navigating
 # a Kubernetes cluster much faster. Instead of typing long kubectl commands,
 # you navigate with keyboard shortcuts, drill into resources, view logs, exec

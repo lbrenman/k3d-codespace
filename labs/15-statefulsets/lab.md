@@ -1,5 +1,6 @@
 # Lab 15: StatefulSets — Running Databases Correctly
 # ─────────────────────────────────────────────────────────────────────────────
+#
 # Every previous lab that deployed PostgreSQL used a Deployment. This works in
 # a single-replica lab environment but is incorrect for production databases.
 # Databases need stable network identities, stable hostnames, and ordered

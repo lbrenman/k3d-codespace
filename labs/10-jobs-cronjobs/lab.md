@@ -1,5 +1,6 @@
 # Lab 10: Jobs & CronJobs — Batch Workloads
 # ─────────────────────────────────────────────────────────────────────────────
+#
 # Not everything in Kubernetes is a long-running server. Jobs and CronJobs
 # handle batch workloads — tasks that run to completion rather than forever.
 #

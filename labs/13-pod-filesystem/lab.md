@@ -1,5 +1,6 @@
 # Lab 13: Exploring Pod Filesystems & Log Files
 # ─────────────────────────────────────────────────────────────────────────────
+#
 # Kubernetes provides several ways to access what's happening inside a running
 # container — its filesystem, log files, and stdout/stderr streams. This lab
 # covers the full toolkit for investigating a pod's internals, which is
