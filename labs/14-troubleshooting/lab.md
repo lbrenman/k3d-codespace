@@ -65,9 +65,10 @@ spec:
 YAML
 
 # ── Step 3: Diagnose CrashLoopBackOff ────────────────────────────────────────
-kubectl get pod crash-loop -n lab14
+kubectl get pod crash-loop -n lab14 -w
 # STATUS shows CrashLoopBackOff, RESTARTS keeps incrementing
 
+# Press Ctrl+C
 # First — check the exit code and last state
 # This tells you WHY it crashed (exit code 1 = general error)
 kubectl describe pod crash-loop -n lab14
