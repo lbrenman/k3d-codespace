@@ -2,6 +2,8 @@
 
 A GitHub Codespace-based Kubernetes learning environment using **k3d** — fast, lightweight, and built for teaching.
 
+A quick and simple Kubernetes overview can be found [here](KubernetesSimpleOverview.md)
+
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/lbrenman/k3d-codespace)
 
 ## What's Included
